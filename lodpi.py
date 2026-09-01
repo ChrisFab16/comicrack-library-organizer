@@ -122,21 +122,58 @@ def scale_insert_point(baseline, wide=False, owner=None, scale=None,
 
 
 def relayout_two_column_grid(controls, owner=None, scale=None, narrow_width=None, wide_width=None):
+    """Place insert controls in a two-column grid with row heights from measured bounds."""
     if scale is None:
         scale = get_scale(owner)
     if scale <= 1.01:
         return
     if narrow_width is None or wide_width is None:
         narrow_width, wide_width = measure_column_widths(controls, owner, scale)
+
+    col1 = scale_int(BASE_COL1, scale, owner)
+    margin = scale_int(16, scale, owner)
+    col2_x = col1 + scale_int(narrow_width, scale, owner) + margin
+    gap_y = scale_int(6, scale, owner)
+    row0 = scale_int(BASE_ROW0, scale, owner)
+    min_row_h = scale_int(BASE_ROW_STEP, scale, owner)
+
+    rows = {}
     for control in controls:
         baseline = control.Tag
         if baseline is None or not isinstance(baseline, Point):
             continue
-        wide = _is_wide_insert_control(control)
-        control.Location = scale_insert_point(
-            baseline, wide, owner, scale, narrow_width, wide_width)
-        if hasattr(control, "RefreshLabelLayout"):
-            control.RefreshLabelLayout()
+        row = 0
+        if baseline.Y > BASE_ROW0:
+            row = int(round((baseline.Y - BASE_ROW0) / float(BASE_ROW_STEP)))
+        if row not in rows:
+            rows[row] = []
+        rows[row].append((baseline.X, control))
+
+    y = row0
+    for row_idx in sorted(rows.keys()):
+        left_col = []
+        right_col = []
+        for x, control in rows[row_idx]:
+            if x >= BASE_COL2:
+                right_col.append(control)
+            else:
+                left_col.append(control)
+        row_height = 0
+        for control in left_col:
+            control.Location = Point(col1, y)
+            if hasattr(control, "RefreshLabelLayout"):
+                control.RefreshLabelLayout()
+            control.PerformLayout()
+            row_height = max(row_height, control.Height)
+        for control in right_col:
+            control.Location = Point(col2_x, y)
+            if hasattr(control, "RefreshLabelLayout"):
+                control.RefreshLabelLayout()
+            control.PerformLayout()
+            row_height = max(row_height, control.Height)
+        if row_height <= 0:
+            row_height = min_row_h
+        y += row_height + gap_y
 
 
 def relayout_single_column(controls, owner=None, scale=None):
@@ -163,6 +200,18 @@ def relayout_single_column(controls, owner=None, scale=None):
         if bottom <= y:
             bottom = y + control.PreferredSize.Height
         y = bottom + gap
+
+
+def apply_button_metrics(button, owner=None, scale=None, min_width=75, min_height=23):
+    """AutoSize button with scaled minimum - avoids clipped label text at HiDPI."""
+    if scale is None:
+        scale = get_scale(owner)
+    if scale <= 1.01:
+        return
+    button.AutoSize = True
+    button.MinimumSize = Size(
+        scale_int(min_width, scale, owner),
+        scale_int(min_height, scale, owner))
 
 
 def layout_row(controls, start_x, y, owner=None, gap=8, coords_scaled=False, scale=None):

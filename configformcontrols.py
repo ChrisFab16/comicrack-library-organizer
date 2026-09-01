@@ -1023,13 +1023,26 @@ class MetadataExcludeRuleControl(FlowLayoutPanel):
         if scale <= 1.01:
             return
         w = lodpi.scale_int(451, scale, owner)
-        self.Width = w
-        self._field.Width = lodpi.scale_int(121, scale, owner)
-        self._operator.Width = lodpi.scale_int(110, scale, owner)
-        val_w = lodpi.scale_int(175, scale, owner)
+        gap = lodpi.scale_int(6, scale, owner)
+        remove_w = lodpi.scale_int(22, scale, owner)
+        row_h = lodpi.scale_int(23, scale, owner)
+        self._remove.Size = Size(remove_w, row_h)
+        avail = max(lodpi.scale_int(200, scale, owner), w - remove_w - gap * 4)
+        ratios = (121, 110, 175)
+        total = float(sum(ratios))
+        field_w = int(avail * ratios[0] / total)
+        op_w = int(avail * ratios[1] / total)
+        val_w = avail - field_w - op_w
+        self._field.Width = field_w
+        self._operator.Width = op_w
         self._value_textbox.Width = val_w
         self._value_combobox.Width = val_w
-        
+        self.Width = w
+        self.PerformLayout()
+        h = self.PreferredSize.Height
+        if h < row_h:
+            h = row_h
+        self.Height = h
 
     def set_fields(self, rule):
 

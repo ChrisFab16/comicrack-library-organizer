@@ -36,7 +36,7 @@ DPI source is always the Configure form handle (`owner=self`).
 
 ## Manual validation (150% and 200%)
 
-1. Open **Library Organizer → Configure** (dialog title shows `2.1.16`).
+1. Open **Library Organizer → Configure** (dialog title shows `2.1.20`).
 2. **Files / Folders** — Text, Number, Multiple Value insert tabs: no column overlap; Search tab round-trip restores layout.
 3. **Yes/No Fields** — Manga / Series Complete stack without overlap; instructions below controls.
 4. **Calculated** — tall rows (e.g. Read %) stack; info label sits to the right of the column.

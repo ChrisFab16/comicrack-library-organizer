@@ -25,6 +25,12 @@ Fork: [ChrisFab16/comicrack-library-organizer](https://github.com/ChrisFab16/com
 
 Copy **one** folder to ComicRack `Scripts/` (e.g. `Library Organizer`). Verify `Package.ini` `Version=` matches the fork tag. Remove stale duplicate plugin folders before copy.
 
+## Spec Kit (enabled on `hidpi-configure-form`)
+
+Active feature: `specs/001-configure-hidpi-relayout/` (`.specify/feature.json`).
+
+Workflow: constitution → spec → plan → tasks → analyze → checklist → implement → operator validation.
+
 ## References
 
 - Manual validation matrix: [docs/validation-results.md](docs/validation-results.md)
@@ -34,5 +40,6 @@ Copy **one** folder to ComicRack `Scripts/` (e.g. `Library Organizer`). Verify `
 
 - Audit **every** Configure tab (Files, Folders, Options, Rules, Empty values, Yes/No, Calculated) — not only the first screenshot.
 - IronPython: use `owner.CreateGraphics()` or `Graphics.FromHwnd`; not static `Control.CreateGraphics()`.
+- **IronPython 2.7 source must be ASCII-only** (or declare `# -*- coding: utf-8 -*-`); em dashes / Unicode in docstrings break `import lodpi` silently from Configure.
 - Relayout on load only; reopen Configure after display-scale or cross-monitor change.
 - ComicRack CE HiDPI foundation is separate (`ComicRackCE` `005-hidpi-foundation`); plugin layout stays in this repo.

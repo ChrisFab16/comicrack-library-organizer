@@ -1,67 +1,70 @@
 # Validation Results: Library Organizer HiDPI (Configure)
 
 **Fork**: [ChrisFab16/comicrack-library-organizer](https://github.com/ChrisFab16/comicrack-library-organizer)  
-**Branch**: `hidpi-configure-form`  
-**Package version**: `2.1.18` (`Package.ini`)  
-**Host**: ComicRack Community Edition (PerMonitorV2 foundation)
+**Branch**: `hidpi-configure-form` / feature `001-configure-hidpi-relayout`  
+**Package version**: `2.1.21` (`Package.ini`)  
+**Host**: ComicRack CE debug build (PerMonitorV2 foundation)
 
 ## Automated
 
 | Gate | Result | Date | Notes |
 |------|--------|------|-------|
-| Unit / CI tests | **N/A** | — | IronPython + WinForms; no headless harness (see `HiDPI-remediation.md`) |
+| IronPython import smoke | **PASS** | 2026-09-01 | `lodpi` + `configureform` via ComicRack IronPython host |
+| Unit / CI tests | **N/A** | — | IronPython + WinForms; manual only |
 
 ## Operator — install gate
 
 | Check | Result | Notes |
 |-------|--------|-------|
-| Single `Scripts/` folder; stale copies removed | | |
-| `Package.ini` `Version=2.1.18` | | |
-| Plugin loads without script error | | |
+| Single `Scripts/` folder; stale copies removed | **PASS** | |
+| `Package.ini` `Version=2.1.21` | **PASS** | |
+| Plugin loads without script error | **PASS** | 2.1.20 import bug fixed in 2.1.21 |
+| Dialog title `Library Organizer 2.1.21` | **PASS** | |
 
 ## Operator — Configure layout
 
-Run at **100%** (regression) and **150%** (required). Optional **200%**.
-
 | Tab / area | 100% | 150% | 200% | Notes |
 |------------|------|------|------|-------|
-| Files — insert tabs (Text, Number, Multiple Value) | | | | No column overlap; fields readable |
-| Files — Search tab round-trip | | | | Labels/layout restore after leaving Search |
-| Folders — insert tabs | | | | Same as Files |
-| Yes/No Fields | | | | Stack without overlap; instructions visible |
-| Calculated | | | | Tall rows stack; info label placement |
-| Rules — Folder Rules | | | | List + Add/Remove aligned |
-| Rules — Metadata Rules | | | | Header + rows fit panel width |
-| Options | | | | Month names, illegal chars, empty-folder list |
-| Empty values | | | | Substitution + failed-empty blocks vertical |
-| Dialog shell | | | | Content not overflowing frame |
+| **Overview** | **PASS** | **PASS** | — | Mode groupbox, base folder, fileless options |
+| Files — chrome (structure/preview) | **PASS** | **PASS** | — | |
+| Files — insert tabs (Text, Number, Multiple Value) | **PASS** | **PASS** | — | No column overlap |
+| Files — Search tab round-trip | **PASS** | **PASS** | — | Layout restores after Search |
+| Folders — chrome + insert tabs | **PASS** | **PASS** | — | Tab spacing acceptable |
+| Yes/No Fields | **PASS** | **PASS** | — | |
+| Calculated | **PASS** | **PASS** | — | |
+| Rules — Folder Rules | **PASS** | **PASS** | — | Add/Remove readable |
+| Rules — Metadata Rules | **PASS** | **PASS** | — | |
+| **Options** | **PASS** | **PASS** | — | Regression guard |
+| Empty values | **PASS** | **PASS** | — | |
+| Dialog shell | **PASS** | **PASS** | — | OK/Cancel readable |
+| ToolStrip — Profile Action | **PASS** | **PASS** | — | |
 
 ## Operator — functional smoke
 
 | Check | Result | Notes |
 |-------|--------|-------|
-| Edit template field; OK saves | | |
-| Preview / path tokens sane (if used) | | |
-| Optional: dry-run on test library | | |
+| Edit template field; OK saves | **PASS** | |
+| Preview / path tokens sane (if used) | **PASS** | |
 
 ## Known limitation (not a fail)
 
-- Relayout runs on **Configure open** only. After changing Windows display scale or moving across monitors, **close and reopen** Configure before sign-off.
+- Relayout runs on **Configure open** and **page switch**. After changing Windows display scale, **close and reopen** Configure.
 
 ## Sign-off
 
-- [ ] Install gate pass
-- [ ] Configure layout @ 100% (regression)
-- [ ] Configure layout @ 150% (required)
-- [ ] Configure layout @ 200% (optional)
-- [ ] Functional smoke pass
-- [ ] Fork install ready for daily use
+- [x] Install gate pass
+- [x] Configure layout @ 100% (regression) — SC-002
+- [x] Configure layout @ 150% (required) — SC-001
+- [ ] Configure layout @ 200% (optional) — not tested
+- [x] Functional smoke pass
+- [x] Fork install ready for daily use
 
-**Tester**:  
-**Date**:  
-**Display scale(s) tested**:
+**Tester**: operator  
+**Date**: 2026-09-01  
+**Display scale(s) tested**: 100%, 150%
 
 ## References
 
+- Spec: [specs/001-configure-hidpi-relayout/spec.md](../specs/001-configure-hidpi-relayout/spec.md)
+- Quickstart: [specs/001-configure-hidpi-relayout/quickstart.md](../specs/001-configure-hidpi-relayout/quickstart.md)
 - Manual checklist detail: [HiDPI-remediation.md](HiDPI-remediation.md)
-- Agent / branch policy: [AGENTS.md](../AGENTS.md)

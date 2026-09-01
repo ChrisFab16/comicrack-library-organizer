@@ -1,4 +1,19 @@
-﻿2.1.18
+﻿2.1.21
+
+Fixed:
+IronPython 2.7 import failure (non-ASCII em dash in lodpi.py docstring broke Configure open). Remove TabPage.Location override; error dialog on HiDPI layout failure.
+
+2.1.20
+
+Fixed:
+Configure HiDPI shell and Overview completion: Mode groupbox interior relayout, base-folder row width/height before placement, OK/Cancel and Folder Rules button metrics, ToolStrip profile footer AutoSize, insert tab padding.
+
+2.1.19
+
+Fixed:
+Complete Configure HiDPI relayout: Overview, Files/Folders chrome, insert grids (measure-after-scale, dynamic row heights), and Rules metadata rows. Options tab unchanged. Version 2.1.19.
+
+2.1.18
 
 Fixed:
 HiDPI Configure dialog layout at 125%–200% Windows display scale: DPI-aware helpers (`lodpi.py`), scale dialog shell at load, anchor Files/Folders insert tabs, widen template fields, reflow two-column insert grids, Options/Rules/Empty values rows, and metadata rule controls. Reopen Configure after changing display scale or moving across monitors.

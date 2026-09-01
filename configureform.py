@@ -53,7 +53,7 @@ from lobookmover import PathMaker
 
 import lodpi
 
-VERSION = "2.1.18"
+VERSION = "2.1.21"
 
 failed_items = System.Array[str](["Age Rating", "Alternate Count", "Alternate Number", "Alternate Series", "Black And White", "Characters", "Colorist", "Count", "Cover Artist", 
                 "Editor", "Format", "Genre", "Imprint", "Inker", "Language", "Letterer", "Locations", "Main Character Or Team", "Manga", "Month", "Notes", "Number", "Penciller", "Publisher", 
@@ -992,6 +992,9 @@ class ConfigureForm(Form):
 
         self.load_rules_page_settings()
 
+        if lodpi.needs_hidpi_layout(self):
+            self.relayout_rules_page()
+
         self._metadata_rules_page.ResumeLayout()
         self._folder_rules_page.ResumeLayout()
         self._rules_page.ResumeLayout()
@@ -1504,6 +1507,7 @@ class ConfigureForm(Form):
         self.load_insert_controls_settings()
 
         self.relayout_insert_control_grids()
+        self.relayout_insert_tab_metrics()
 
         self._insert_controls.ResumeLayout()
         self._yes_no_insert_controls.ResumeLayout()
@@ -2073,19 +2077,177 @@ class ConfigureForm(Form):
 
 
     def configure_form_load(self, sender, e):
-        if lodpi.needs_hidpi_layout(self):
-            self.apply_hidpi_form_metrics()
-        self.ensure_files_folders_resize_hooks()
-        self.ensure_options_resize_hooks()
-        self.relayout_all_hidpi()
+        try:
+            if lodpi.needs_hidpi_layout(self):
+                self.apply_hidpi_form_metrics()
+                self.apply_hidpi_shell_metrics()
+            self.ensure_files_folders_resize_hooks()
+            self.ensure_options_resize_hooks()
+            self.relayout_all_hidpi()
+        except Exception, ex:
+            import traceback
+            traceback.print_exc()
+            MessageBox.Show(
+                "Library Organizer Configure failed during HiDPI layout:\n\n" + str(ex),
+                "Library Organizer",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error)
 
     def relayout_all_hidpi(self):
         """Single entry point for all HiDPI relayout passes (one scale lookup)."""
         if not lodpi.needs_hidpi_layout(self):
             return
+        self.relayout_overview_page()
+        self.relayout_files_page_chrome()
+        self.relayout_folders_page_chrome()
         self.relayout_insert_control_grids()
+        self.relayout_insert_tab_metrics()
         self.relayout_options_page()
         self.relayout_rules_page()
+
+    def relayout_mode_groupbox(self, scale=None):
+        """Reflow Mode groupbox interior (radios, copy option, simulate help)."""
+        if scale is None:
+            scale = lodpi.get_scale(self)
+        s = lambda v: lodpi.scale_int(v, scale=scale, owner=self)
+        inner_left = s(12)
+        inner_top = s(18)
+        gap = s(8)
+        page_w = self._overview_page.ClientSize.Width
+
+        self._mode_groupbox.Location = Point(s(5), s(5))
+        self._mode_groupbox.Width = max(s(300), page_w - s(10))
+
+        self._mode_move.AutoSize = True
+        self._mode_copy.AutoSize = True
+        self._mode_simulate.AutoSize = True
+        lodpi.layout_row(
+            [self._mode_move, self._mode_copy, self._mode_simulate],
+            inner_left, inner_top, self, gap, True, scale=scale)
+        y = max(self._mode_move.Bottom, self._mode_copy.Bottom, self._mode_simulate.Bottom) + gap
+
+        self._copy_option.AutoSize = True
+        self._copy_option.Location = Point(inner_left + s(4), y)
+        y = self._copy_option.Bottom + gap
+
+        self._label_simulate.AutoSize = True
+        self._label_simulate.Location = Point(inner_left, y)
+        y = self._label_simulate.Bottom + s(8)
+
+        self._mode_groupbox.Height = y
+
+    def relayout_overview_page(self):
+        """Reflow Overview tab rows at HiDPI (fixed 96-DPI coords in designer)."""
+        if not lodpi.needs_hidpi_layout(self):
+            return
+        scale = lodpi.get_scale(self)
+        s = lambda v: lodpi.scale_int(v, scale=scale, owner=self)
+        left = s(5)
+        gap = s(6)
+        row_h = s(23)
+        page_w = self._overview_page.ClientSize.Width
+
+        self.relayout_mode_groupbox(scale)
+
+        y = self._mode_groupbox.Bottom + gap
+        self._use_file_organization.AutoSize = True
+        self._use_folder_organization.AutoSize = True
+        lodpi.layout_row(
+            [self._use_file_organization, self._use_folder_organization],
+            s(20), y, self, gap, True, scale=scale)
+        y = max(self._use_file_organization.Bottom, self._use_folder_organization.Bottom) + gap
+
+        self._label_base_folder.AutoSize = True
+        lodpi.apply_button_metrics(self._browse_button, self, scale, 75, 23)
+        self._label_base_folder.PerformLayout()
+        self._browse_button.PerformLayout()
+        row_gap = s(8)
+        label_w = self._label_base_folder.Width
+        browse_w = self._browse_button.Width
+        path_w = max(s(120), page_w - left - label_w - browse_w - row_gap * 2 - s(8))
+        self._base_folder_path.Height = row_h
+        self._base_folder_path.Width = path_w
+        lodpi.layout_row(
+            [self._label_base_folder, self._base_folder_path, self._browse_button],
+            left, y, self, row_gap, True, scale=scale)
+        y = max(self._base_folder_path.Bottom, self._browse_button.Bottom,
+                self._label_base_folder.Bottom) + gap
+
+        self._copy_fileless_custom_thumbnails.AutoSize = True
+        self._copy_fileless_custom_thumbnails.Location = Point(s(20), y)
+        y = self._copy_fileless_custom_thumbnails.Bottom + gap
+
+        self._fileless_image_format_label.AutoSize = True
+        self._fileless_image_format.Width = s(66)
+        self._fileless_image_format.Height = row_h
+        lodpi.layout_row(
+            [self._fileless_image_format_label, self._fileless_image_format],
+            s(20), y, self, s(8), True, scale=scale)
+
+    def relayout_files_page_chrome(self):
+        """Reflow Files page structure/preview rows (not insert tabs)."""
+        if not lodpi.needs_hidpi_layout(self):
+            return
+        if not hasattr(self, "_file_structure"):
+            return
+        scale = lodpi.get_scale(self)
+        s = lambda v: lodpi.scale_int(v, scale=scale, owner=self)
+        left = s(5)
+        gap = s(6)
+        page_w = self._files_page.ClientSize.Width
+
+        self._label_file_structure.AutoSize = True
+        y = s(10)
+        lodpi.layout_row(
+            [self._label_file_structure, self._file_structure],
+            left, y, self, s(8), True, scale=scale)
+        box_w = max(s(160), page_w - self._file_structure.Left - s(8))
+        self._file_structure.Width = box_w
+        self._file_structure.Height = s(40)
+        y = max(self._file_structure.Bottom, self._label_file_structure.Bottom) + gap
+
+        self._label_file_preview.AutoSize = True
+        lodpi.layout_row(
+            [self._label_file_preview, self._file_preview],
+            left, y, self, s(8), True, scale=scale)
+        preview_w = max(s(160), page_w - self._file_preview.Left - s(8))
+        self._file_preview.Width = preview_w
+        self._file_preview.Height = s(40)
+
+    def relayout_folders_page_chrome(self):
+        """Reflow Folders page structure/preview/separator rows."""
+        if not lodpi.needs_hidpi_layout(self):
+            return
+        if not hasattr(self, "_folder_structure"):
+            return
+        scale = lodpi.get_scale(self)
+        s = lambda v: lodpi.scale_int(v, scale=scale, owner=self)
+        left = s(3)
+        gap = s(6)
+        page_w = self._folders_page.ClientSize.Width
+
+        self._label_folder_structure.AutoSize = True
+        y = s(10)
+        lodpi.layout_row(
+            [self._label_folder_structure, self._folder_structure],
+            left, y, self, s(8), True, scale=scale)
+        box_w = max(s(160), page_w - self._folder_structure.Left - s(8))
+        self._folder_structure.Width = box_w
+        self._folder_structure.Height = s(40)
+        y = max(self._folder_structure.Bottom, self._label_folder_structure.Bottom) + gap
+
+        self._label_folder_preview.AutoSize = True
+        lodpi.layout_row(
+            [self._label_folder_preview, self._folder_preview],
+            left, y, self, s(8), True, scale=scale)
+        preview_w = max(s(160), page_w - self._folder_preview.Left - s(8))
+        self._folder_preview.Width = preview_w
+        self._folder_preview.Height = s(40)
+        y = self._folder_preview.Bottom + gap
+
+        self._insert_folder_seperator.AutoSize = True
+        self._insert_folder_seperator.Location = Point(
+            max(left, (page_w - self._insert_folder_seperator.Width) // 2), y)
 
     def _options_tab_content_size(self):
         """Usable area inside the Options TabControl (matches selected tab page coords)."""
@@ -2103,7 +2265,7 @@ class ConfigureForm(Form):
             self.relayout_options_page()
 
     def relayout_options_page(self):
-        """Reflow Options / Empty values tabs — inline rows use fixed X at 96 DPI."""
+        """Reflow Options / Empty values tabs - inline rows use fixed X at 96 DPI."""
         if not lodpi.needs_hidpi_layout(self):
             return
         if not hasattr(self, "_options_page_options_tab"):
@@ -2262,24 +2424,22 @@ class ConfigureForm(Form):
             self._excluded_folders_list.Size = Size(list_w, list_h)
             self._excluded_folders_list.Location = Point(left, s(26))
             btn_x = left + list_w + s(8)
+            for btn in (self._add_excluded_folder, self._remove_excluded_folder):
+                lodpi.apply_button_metrics(btn, self, scale, 75, 23)
             self._add_excluded_folder.Location = Point(btn_x, s(26))
-            self._remove_excluded_folder.Location = Point(btn_x, s(62))
+            self._remove_excluded_folder.Location = Point(btn_x, s(26) + self._add_excluded_folder.Height + s(8))
 
         if hasattr(self, "_metadata_rules_container"):
             page_w = self._metadata_rules_page.ClientSize.Width
             self._metadata_rules_container.Location = Point(0, s(49))
             self._metadata_rules_container.Size = Size(page_w, s(345))
+            self._metadata_rules_add_group.AutoSize = True
+            self._metadata_rules_add_rule.AutoSize = True
             lodpi.layout_row(
                 [self._metadata_rules_mode, self._metadata_rules_label1,
-                 self._metadata_rules_operator, self._metadata_rules_label2],
-                s(8), s(12), self, s(8), scale=scale)
-            margin = s(8)
-            row_y = s(11)
-            self._metadata_rules_add_rule.Location = Point(
-                page_w - self._metadata_rules_add_rule.Width - margin, row_y)
-            self._metadata_rules_add_group.Location = Point(
-                self._metadata_rules_add_rule.Left - self._metadata_rules_add_group.Width - margin,
-                row_y)
+                 self._metadata_rules_operator, self._metadata_rules_label2,
+                 self._metadata_rules_add_group, self._metadata_rules_add_rule],
+                s(8), s(12), self, s(8), True, scale=scale)
             for control in self._metadata_rules_container.Controls:
                 if hasattr(control, "apply_hidpi_metrics"):
                     control.apply_hidpi_metrics(self, scale)
@@ -2301,12 +2461,13 @@ class ConfigureForm(Form):
         if not lodpi.needs_hidpi_layout(self):
             return
         scale = lodpi.get_scale(self)
-        all_controls = self._insert_controls_dict.itervalues()
-        narrow_w, wide_w = lodpi.measure_column_widths(all_controls, self, scale)
 
-        for control in all_controls:
+        for control in self._insert_controls_dict.itervalues():
             if hasattr(control, "apply_hidpi_metrics"):
                 control.apply_hidpi_metrics(self, scale)
+
+        all_controls = self._insert_controls_dict.itervalues()
+        narrow_w, wide_w = lodpi.measure_column_widths(all_controls, self, scale)
 
         two_column_lists = (
             "_text_insert_controls_list",
@@ -2380,18 +2541,80 @@ class ConfigureForm(Form):
     def apply_hidpi_form_metrics(self):
         """Scale fixed shell metrics that were authored at 96 DPI."""
         self.AutoSize = False
+        strip_w = lodpi.scale_int(130, owner=self)
         self.ClientSize = System.Drawing.Size(lodpi.scale_int(639, owner=self), lodpi.scale_int(462, owner=self))
         content_size = System.Drawing.Size(lodpi.scale_int(500, owner=self), lodpi.scale_int(420, owner=self))
+        page_origin = System.Drawing.Point(strip_w, lodpi.scale_int(10, owner=self))
         for panel in (self._files_page, self._folders_page, self._overview_page):
             panel.Size = content_size
+            panel.Location = page_origin
         self._rules_page.Size = content_size
+        self._rules_page.Location = page_origin
         self._options_page.Size = content_size
-        self._okay.Location = System.Drawing.Point(lodpi.scale_int(474, owner=self), lodpi.scale_int(433, owner=self))
-        self._cancel.Location = System.Drawing.Point(lodpi.scale_int(555, owner=self), lodpi.scale_int(433, owner=self))
+        self._options_page.Location = page_origin
         self._space_automatically.Location = System.Drawing.Point(lodpi.scale_int(5, owner=self), lodpi.scale_int(107, owner=self))
         if hasattr(self, "_options_page_options_tab"):
             for tab in (self._options_page_options_tab, self._options_page_empty_values_tab):
                 tab.AutoScroll = True
+
+    def apply_hidpi_shell_metrics(self):
+        """Scale toolbar, profile footer, and OK/Cancel button metrics."""
+        if not lodpi.needs_hidpi_layout(self):
+            return
+        scale = lodpi.get_scale(self)
+        s = lambda v: lodpi.scale_int(v, scale=scale, owner=self)
+
+        self._toolstrip.Size = System.Drawing.Size(s(130), s(462))
+        self._toolstrip.Padding = System.Windows.Forms.Padding(s(8))
+
+        self._profile_action.AutoSize = True
+        self._profile_selector.Size = System.Drawing.Size(s(107), s(23))
+        self._toolstrip.PerformLayout()
+        min_strip_w = max(s(145), self._profile_selector.Width + s(24), self._profile_action.Width + s(24))
+        self._toolstrip.Width = min_strip_w
+
+        page_origin = System.Drawing.Point(self._toolstrip.Width, s(10))
+        content_size = System.Drawing.Size(lodpi.scale_int(500, owner=self), lodpi.scale_int(420, owner=self))
+        for panel in (self._overview_page, self._files_page, self._folders_page,
+                      self._rules_page, self._options_page):
+            panel.Location = page_origin
+            panel.Size = content_size
+
+        client_w = self._toolstrip.Width + content_size.Width + s(9)
+        client_h = lodpi.scale_int(462, owner=self)
+        self.ClientSize = System.Drawing.Size(client_w, client_h)
+
+        footer_y = client_h - s(29)
+        for btn in (self._okay, self._cancel):
+            lodpi.apply_button_metrics(btn, self, scale, 75, 23)
+        self._cancel.Location = System.Drawing.Point(client_w - self._cancel.Width - s(10), footer_y)
+        self._okay.Location = System.Drawing.Point(
+            self._cancel.Left - self._okay.Width - s(8), footer_y)
+
+    def relayout_insert_tab_metrics(self):
+        """Scale insert TabControl padding and tab header spacing."""
+        if not lodpi.needs_hidpi_layout(self):
+            return
+        if not hasattr(self, "_insert_controls"):
+            return
+        scale = lodpi.get_scale(self)
+        s = lambda v: lodpi.scale_int(v, scale=scale, owner=self)
+        pad = System.Windows.Forms.Padding(s(4), s(6), s(4), s(4))
+        for tab_name in (
+            "_text_insert_controls",
+            "_number_insert_controls",
+            "_yes_no_insert_controls",
+            "_multiple_value_insert_controls",
+            "_calculated_insert_controls",
+            "_search_insert_controls",
+        ):
+            tab = getattr(self, tab_name, None)
+            if tab is not None:
+                tab.Padding = pad
+        try:
+            self._insert_controls.ItemSize = System.Drawing.Size(s(84), s(24))
+        except Exception:
+            pass
 
     def layout_insert_controls_on_page(self, page):
         """Fit the shared insert tab control inside the files/folders panel."""
@@ -2461,6 +2684,10 @@ class ConfigureForm(Form):
             self._folders_page.Controls.Add(self._space_automatically)
             self._folders_page.Controls.Add(self._preview_book_selector)
             self.layout_insert_controls_on_page(self._folders_page)
+            self.relayout_folders_page_chrome()
+            if lodpi.needs_hidpi_layout(self):
+                self.relayout_insert_control_grids()
+                self.relayout_insert_tab_metrics()
 
         elif sender.Tag is self._files_page:
             if self._files_page.Controls.Count == 0:
@@ -2471,6 +2698,10 @@ class ConfigureForm(Form):
             self._files_page.Controls.Add(self._space_automatically)
             self._files_page.Controls.Add(self._preview_book_selector)
             self.layout_insert_controls_on_page(self._files_page)
+            self.relayout_files_page_chrome()
+            if lodpi.needs_hidpi_layout(self):
+                self.relayout_insert_control_grids()
+                self.relayout_insert_tab_metrics()
 
         elif sender.Tag is self._rules_page:
             if self._rules_page.Controls.Count == 0:
@@ -2481,6 +2712,9 @@ class ConfigureForm(Form):
             if self._options_page.Controls.Count == 0:
                 self.create_options_page()
             self.relayout_options_page()
+
+        elif sender.Tag is self._overview_page:
+            self.relayout_overview_page()
 
         for control in self._toolstrip.Items:
             if type(control) is System.Windows.Forms.ToolStripButton:
