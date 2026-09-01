@@ -2,7 +2,7 @@
 
 See `docs/HiDPI-remediation.md` on the fork branch for review notes and manual validation.
 
-**Upstream PR:** withdrawn (not pursuing Stonepaw submission); install from fork only.
+**Upstream PR:** withdrawn (not pursuing Stonepaw submission); install from fork only. Record results in [validation-results.md](validation-results.md).
 
 ## Summary
 

@@ -25,6 +25,11 @@ Fork: [ChrisFab16/comicrack-library-organizer](https://github.com/ChrisFab16/com
 
 Copy **one** folder to ComicRack `Scripts/` (e.g. `Library Organizer`). Verify `Package.ini` `Version=` matches the fork tag. Remove stale duplicate plugin folders before copy.
 
+## References
+
+- Manual validation matrix: [docs/validation-results.md](docs/validation-results.md)
+- Design / review notes: [docs/HiDPI-remediation.md](docs/HiDPI-remediation.md)
+
 ## Lessons (2026-09-01)
 
 - Audit **every** Configure tab (Files, Folders, Options, Rules, Empty values, Yes/No, Calculated) — not only the first screenshot.
