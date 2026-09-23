@@ -69,4 +69,18 @@ button {
   cursor: pointer;
 }
 button.secondary { background: #3a424c; }
+button.tiny { padding: 0.25rem 0.55rem; font-size: 0.8rem; margin-left: 0.5rem; }
 button:hover { filter: brightness(1.08); }
+.checklist { display: grid; grid-template-columns: 1fr 1fr; gap: 0.25rem 0.75rem; max-height: 180px; overflow: auto; margin-top: 0.35rem; }
+.checklist label { margin: 0.15rem 0; font-size: 0.85rem; }
+.plain-list { list-style: none; padding: 0; margin: 0.5rem 0; }
+.plain-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  cursor: default;
+}
+.plain-list li.muted { color: var(--muted); font-style: italic; }
+.row { display: flex; gap: 0.5rem; align-items: center; }
+.row input[type="text"] { flex: 1; margin-top: 0; }

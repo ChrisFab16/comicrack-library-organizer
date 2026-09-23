@@ -1,4 +1,9 @@
-﻿2.2.2
+﻿2.2.3
+
+New:
+Configure SPA Phase D — Empty values tab (field substitutions, failed-fields checklist, empty-folder exceptions) in WebView2; Files/Folders/Rules remain classic.
+
+2.2.2
 
 New:
 Configure SPA Phase C — Options scalars (empty folders, fileless format, failed folder, related toggles) in WebView2; Empty substitutions still classic.
