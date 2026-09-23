@@ -25,15 +25,28 @@ Fork: [ChrisFab16/comicrack-library-organizer](https://github.com/ChrisFab16/com
 
 Copy **one** folder to ComicRack `Scripts/` (e.g. `Library Organizer`). Verify `Package.ini` `Version=` matches the fork tag. Remove stale duplicate plugin folders before copy.
 
-## Spec Kit (enabled on `hidpi-configure-form`)
+## Spec Kit (required for all product changes)
 
-Active feature: `specs/001-configure-hidpi-relayout/` (`.specify/feature.json`).
+Active feature: `.specify/feature.json` (currently `specs/002-configure-spa/` after Phases A–C).
 
-Workflow: constitution → spec → plan → tasks → analyze → checklist → implement → operator validation.
+**Full adherence from 2026-09-23** (Codesync `AGENTS.md` §5b / §24). No silent hotfixes on plugin code, `Package.ini`, or SPA `ui/` without artifacts.
+
+| Gate | Command / artifact | Before |
+|------|-------------------|--------|
+| Specify | `/speckit-specify` → `spec.md` | New scope |
+| Plan | `/speckit-plan` → `plan.md` | Tasks |
+| Tasks | `/speckit-tasks` → `tasks.md` | Analyze |
+| Analyze | `/speckit-analyze` → `analyze-report.md` (CRITICAL=0) | Checklist |
+| Checklist | `/speckit-checklist-pre-implement` (or equivalent) | Implement |
+| Implement | `/speckit-implement` | Commit / PR |
+| Validate | `docs/validation-*.md` operator/CI | Mark done |
+
+Prior HiDPI feature: `specs/001-configure-hidpi-relayout/`. Configure SPA Phases A–C used lightweight phase docs; analyze/checklist were **backfilled** retrospectively — do not repeat that shortcut.
 
 ## References
 
-- Manual validation matrix: [docs/validation-results.md](docs/validation-results.md)
+- Manual HiDPI matrix: [docs/validation-results.md](docs/validation-results.md)
+- SPA Phase C sign-off: [docs/validation-spa-phase-c.md](docs/validation-spa-phase-c.md)
 - Design / review notes: [docs/HiDPI-remediation.md](docs/HiDPI-remediation.md)
 
 ## Lessons (2026-09-01)

@@ -2,7 +2,7 @@
   const hostMeta = document.getElementById("hostMeta");
   const list = document.getElementById("profiles");
   let state = {
-    version: "2.2.1",
+    version: "2.2.2",
     lastUsed: "",
     profiles: [],
     selectedProfile: "",
@@ -16,7 +16,7 @@
     });
   }
 
-  function fillOverview() {
+  function fillForm() {
     const p = selectedProfile();
     if (!p) return;
     document.getElementById("baseFolder").value = p.baseFolder || "";
@@ -27,9 +27,16 @@
     document.getElementById("useFileName").checked = !!p.useFileName;
     document.getElementById("copyMode").checked = !!p.copyMode;
     document.getElementById("moveFileless").checked = !!p.moveFileless;
+    document.getElementById("dontAskWhenMultiOne").checked = p.dontAskWhenMultiOne !== false;
+    document.getElementById("removeEmptyFolder").checked = p.removeEmptyFolder !== false;
+    document.getElementById("emptyFolder").value = p.emptyFolder || "";
+    document.getElementById("filelessFormat").value = p.filelessFormat || ".jpg";
+    document.getElementById("failEmptyValues").checked = !!p.failEmptyValues;
+    document.getElementById("moveFailed").checked = !!p.moveFailed;
+    document.getElementById("failedFolder").value = p.failedFolder || "";
   }
 
-  function readOverviewIntoState() {
+  function readFormIntoState() {
     const p = selectedProfile();
     if (!p) return;
     p.baseFolder = document.getElementById("baseFolder").value || "";
@@ -39,6 +46,13 @@
     p.useFileName = document.getElementById("useFileName").checked;
     p.copyMode = document.getElementById("copyMode").checked;
     p.moveFileless = document.getElementById("moveFileless").checked;
+    p.dontAskWhenMultiOne = document.getElementById("dontAskWhenMultiOne").checked;
+    p.removeEmptyFolder = document.getElementById("removeEmptyFolder").checked;
+    p.emptyFolder = document.getElementById("emptyFolder").value || "";
+    p.filelessFormat = document.getElementById("filelessFormat").value || ".jpg";
+    p.failEmptyValues = document.getElementById("failEmptyValues").checked;
+    p.moveFailed = document.getElementById("moveFailed").checked;
+    p.failedFolder = document.getElementById("failedFolder").value || "";
   }
 
   function render() {
@@ -48,9 +62,9 @@
       li.textContent = p.name + (p.baseFolder ? " — " + p.baseFolder : "");
       if (p.name === state.selectedProfile) li.className = "active";
       li.addEventListener("click", async function () {
-        readOverviewIntoState();
+        readFormIntoState();
         state.selectedProfile = p.name;
-        fillOverview();
+        fillForm();
         render();
         await HostApi.call("host.config.set", { config: JSON.stringify(state) });
       });
@@ -64,15 +78,26 @@
   }
 
   async function persist(extra) {
-    readOverviewIntoState();
+    readFormIntoState();
     Object.assign(state, extra || {});
     await HostApi.call("host.config.set", { config: JSON.stringify(state) });
   }
 
+  document.querySelectorAll(".tab").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".tab").forEach(function (b) {
+        b.classList.toggle("active", b === btn);
+      });
+      const tab = btn.getAttribute("data-tab");
+      document.getElementById("panel-overview").classList.toggle("hidden", tab !== "overview");
+      document.getElementById("panel-options").classList.toggle("hidden", tab !== "options");
+    });
+  });
+
   try {
     const info = await HostApi.call("host.getInfo");
     hostMeta.textContent =
-      "Host " + info.productVersion + " · API v" + info.apiVersion + " · SPA Configure Phase B";
+      "Host " + info.productVersion + " · API v" + info.apiVersion + " · SPA Configure Phase C";
 
     const cfg = await HostApi.call("host.config.get");
     if (cfg && cfg.config) {
@@ -87,7 +112,7 @@
       state.selectedProfile = state.profiles[0].name;
     }
     render();
-    fillOverview();
+    fillForm();
   } catch (err) {
     hostMeta.textContent = "Host bridge error: " + (err.message || JSON.stringify(err));
   }

@@ -1,4 +1,9 @@
-﻿2.2.1
+﻿2.2.2
+
+New:
+Configure SPA Phase C — Options scalars (empty folders, fileless format, failed folder, related toggles) in WebView2; Empty substitutions still classic.
+
+2.2.1
 
 New:
 Configure SPA Phase B — Overview fields (base folder, mode, organize/rename/fileless flags) editable in WebView2; Save overview persists profiles.
