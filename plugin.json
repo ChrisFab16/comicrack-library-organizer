@@ -1,0 +1,17 @@
+{
+  "id": "library-organizer-main",
+  "version": "2.2.0",
+  "apiVersion": 1,
+  "kind": "python",
+  "ui": {
+    "configure": "ui/dist/index.html",
+    "hotReload": true
+  },
+  "hooks": [
+    {
+      "type": "Books",
+      "key": "library-organizer-main",
+      "name": "Library Organizer"
+    }
+  ]
+}
