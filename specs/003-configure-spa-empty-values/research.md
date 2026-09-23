@@ -24,6 +24,11 @@ Phase B/C use marker scans. Phase D adds:
 - `_json_empty_data(dict)` → `[{"field":"…","value":"…"},…]`
 - `_bridge_extract_string_list(chunk, key)`
 - `_bridge_extract_empty_data(chunk)` → dict
+- `_bridge_profile_chunk(text, name)` → full `{...}` object (brace-matched)
+
+### SC-D1 regression (2026-09-23)
+
+Apply used `text.find("]")` as the profile chunk end when no next profile. That hit the first closing bracket of `emptyData`, so array extract returned `None` and substitutions never applied. Fixed in **2.2.4**.
 
 ## Out of scope confirmation
 
