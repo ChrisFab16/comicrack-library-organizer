@@ -1,4 +1,9 @@
-﻿2.1.21
+﻿2.2.0
+
+New:
+Configure SPA Phase A for ComicRack CE (WebView2 Host API): profile overview shell with classic Configure fallback/escape hatch. Requires CE with ShowWebConfigure; otherwise WinForms Configure unchanged.
+
+2.1.21
 
 Fixed:
 IronPython 2.7 import failure (non-ASCII em dash in lodpi.py docstring broke Configure open). Remove TabPage.Location override; error dialog on HiDPI layout failure.

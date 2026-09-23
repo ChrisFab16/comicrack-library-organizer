@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Library Organizer Configure</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Library Organizer</h1>
+    <p id="hostMeta" class="meta">Connecting…</p>
+  </header>
+  <main>
+    <section>
+      <h2>Profiles</h2>
+      <p class="hint">Phase A SPA shell — profile overview only. Full Files/Folders/Rules editing still uses classic Configure.</p>
+      <ul id="profiles"></ul>
+      <p id="selected" class="meta"></p>
+    </section>
+    <section class="actions">
+      <button type="button" id="btnClassic">Open classic Configure…</button>
+      <button type="button" id="btnClose" class="secondary">Close</button>
+    </section>
+  </main>
+  <script src="./host-bridge.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

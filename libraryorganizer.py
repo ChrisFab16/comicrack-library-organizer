@@ -43,7 +43,7 @@ import loworkerform
 from loworkerform import ProfileSelector, WorkerForm, WorkerFormUndo
 
 import locommon
-from locommon import PROFILEFILE, UNDOFILE, UndoCollection
+from locommon import PROFILEFILE, UNDOFILE, UndoCollection, SCRIPTDIRECTORY
 
 import lobookmover
 
@@ -75,6 +75,8 @@ def LibraryOrganizer(books):
 #@Hook Library
 #@Image libraryorganizer.png
 def ConfigureLibraryOrganizer(books):
+    if books is None and _try_spa_configure():
+        return
     if books is None:
         books = ComicRack.App.GetLibraryBooks()
     try:
@@ -93,7 +95,95 @@ def ConfigureLibraryOrganizer(books):
 #@Key library-organizer-main
 #@Hook ConfigScript
 def ConfigLibraryOrganizer():
+    if _try_spa_configure():
+        return
     ConfigureLibraryOrganizer(None)
+
+
+def _can_show_web_configure():
+    return hasattr(ComicRack, "ShowWebConfigure")
+
+
+def _bridge_path():
+    return System.IO.Path.Combine(SCRIPTDIRECTORY, "webview-ui.config")
+
+
+def _write_spa_bridge(profiles, lastused):
+    """Serialize a lightweight profile overview for the Configure SPA."""
+    items = []
+    for name in profiles.keys():
+        p = profiles[name]
+        base = ""
+        try:
+            base = p.BaseFolder or ""
+        except Exception:
+            pass
+        items.append({"name": name, "baseFolder": base})
+    def esc(s):
+        if s is None:
+            return ""
+        return str(s).replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "")
+    parts = []
+    for it in items:
+        parts.append("{\"name\":\"%s\",\"baseFolder\":\"%s\"}" % (esc(it["name"]), esc(it["baseFolder"])))
+    last_name = ""
+    if lastused:
+        try:
+            last_name = lastused[0] if hasattr(lastused, "__getitem__") else lastused
+        except Exception:
+            last_name = str(lastused)
+    selected = esc(last_name) if last_name else (esc(items[0]["name"]) if items else "")
+    body = "{\"version\":\"2.2.0\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\",\"openClassic\":false,\"profiles\":[%s]}" % (
+        esc(last_name), selected, ",".join(parts))
+    File.WriteAllText(_bridge_path(), body)
+
+
+def _read_spa_bridge():
+    path = _bridge_path()
+    if not File.Exists(path):
+        return None
+    try:
+        text = File.ReadAllText(path)
+        # Minimal parse for openClassic and selectedProfile
+        open_classic = "\"openClassic\":true" in text.replace(" ", "")
+        selected = None
+        marker = "\"selectedProfile\":\""
+        idx = text.find(marker)
+        if idx >= 0:
+            start = idx + len(marker)
+            end = text.find("\"", start)
+            if end > start:
+                selected = text[start:end]
+        return {"openClassic": open_classic, "selectedProfile": selected, "raw": text}
+    except Exception:
+        return None
+
+
+def _try_spa_configure():
+    """Open WebView2 SPA Configure when CE Host API is available. Returns True if handled."""
+    if not _can_show_web_configure():
+        return False
+    try:
+        locommon.ComicRack = ComicRack
+        lobookmover.ComicRack = ComicRack
+        profiles, lastused = load_profiles(PROFILEFILE)
+        _write_spa_bridge(profiles, lastused)
+        ComicRack.ShowWebConfigure(SCRIPTDIRECTORY)
+        bridge = _read_spa_bridge()
+        if bridge and bridge.get("openClassic"):
+            books = ComicRack.App.GetLibraryBooks()
+            show_config_form(profiles, lastused, books)
+        elif bridge and bridge.get("selectedProfile"):
+            try:
+                save_last_used(PROFILEFILE, [bridge["selectedProfile"]])
+            except Exception:
+                pass
+        return True
+    except Exception, ex:
+        print "SPA Configure failed; falling back to WinForms"
+        print ex
+        MessageBox.Show("SPA Configure failed (%s). Opening classic Configure." % str(ex))
+        return False
 
 
 #@Name Library Organizer (Quick)
