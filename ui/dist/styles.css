@@ -4,6 +4,7 @@
   --muted: #9aa3ad;
   --card: #262c34;
   --accent: #3d8bfd;
+  --input: #1e242b;
   font-family: "Segoe UI", system-ui, sans-serif;
 }
 body { margin: 0; background: var(--bg); color: var(--fg); }
@@ -21,7 +22,33 @@ li {
   border: 1px solid transparent;
 }
 li.active { border-color: var(--accent); }
-.actions { display: flex; gap: 0.6rem; margin-top: 1.25rem; }
+.card {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  margin-top: 0.5rem;
+}
+label { display: block; margin: 0.65rem 0; font-weight: 600; font-size: 0.92rem; }
+label.check { font-weight: 500; }
+input[type="text"] {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  box-sizing: border-box;
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #5558;
+  background: var(--input);
+  color: var(--fg);
+}
+fieldset {
+  border: 1px solid #5556;
+  border-radius: 8px;
+  margin: 0.75rem 0;
+  padding: 0.5rem 0.75rem 0.75rem;
+}
+fieldset label { display: inline-block; margin-right: 1rem; font-weight: 500; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.25rem; }
 button {
   background: var(--accent);
   color: #fff;

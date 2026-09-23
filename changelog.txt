@@ -1,4 +1,9 @@
-﻿2.2.0
+﻿2.2.1
+
+New:
+Configure SPA Phase B — Overview fields (base folder, mode, organize/rename/fileless flags) editable in WebView2; Save overview persists profiles.
+
+2.2.0
 
 New:
 Configure SPA Phase A for ComicRack CE (WebView2 Host API): profile overview shell with classic Configure fallback/escape hatch. Requires CE with ShowWebConfigure; otherwise WinForms Configure unchanged.

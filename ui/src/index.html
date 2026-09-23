@@ -14,12 +14,28 @@
   <main>
     <section>
       <h2>Profiles</h2>
-      <p class="hint">Phase A SPA shell — profile overview only. Full Files/Folders/Rules editing still uses classic Configure.</p>
       <ul id="profiles"></ul>
-      <p id="selected" class="meta"></p>
+    </section>
+    <section id="overview" class="card">
+      <h2>Overview</h2>
+      <p class="hint">Phase B — edit overview for the selected profile. Files/Folders/Rules still use classic Configure.</p>
+      <label>Base folder
+        <input id="baseFolder" type="text" />
+      </label>
+      <fieldset>
+        <legend>Mode</legend>
+        <label><input type="radio" name="mode" value="Move" /> Move</label>
+        <label><input type="radio" name="mode" value="Copy" /> Copy</label>
+        <label><input type="radio" name="mode" value="Simulate" /> Simulate</label>
+      </fieldset>
+      <label class="check"><input id="useFolder" type="checkbox" /> Organize into folders</label>
+      <label class="check"><input id="useFileName" type="checkbox" /> Rename files</label>
+      <label class="check"><input id="copyMode" type="checkbox" /> Copy custom thumbnails / related (copy mode)</label>
+      <label class="check"><input id="moveFileless" type="checkbox" /> Move fileless books</label>
     </section>
     <section class="actions">
-      <button type="button" id="btnClassic">Open classic Configure…</button>
+      <button type="button" id="btnSave">Save overview</button>
+      <button type="button" id="btnClassic" class="secondary">Open classic Configure…</button>
       <button type="button" id="btnClose" class="secondary">Close</button>
     </section>
   </main>

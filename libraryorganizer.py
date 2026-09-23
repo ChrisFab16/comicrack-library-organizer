@@ -43,7 +43,7 @@ import loworkerform
 from loworkerform import ProfileSelector, WorkerForm, WorkerFormUndo
 
 import locommon
-from locommon import PROFILEFILE, UNDOFILE, UndoCollection, SCRIPTDIRECTORY
+from locommon import PROFILEFILE, UNDOFILE, UndoCollection, SCRIPTDIRECTORY, Mode
 
 import lobookmover
 
@@ -108,34 +108,86 @@ def _bridge_path():
     return System.IO.Path.Combine(SCRIPTDIRECTORY, "webview-ui.config")
 
 
+def _json_esc(s):
+    if s is None:
+        return ""
+    return str(s).replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "")
+
+
+def _json_bool(v):
+    return "true" if v else "false"
+
+
+def _profile_overview_item(name, p):
+    mode = Mode.Move
+    try:
+        mode = p.Mode or Mode.Move
+    except Exception:
+        pass
+    base = ""
+    try:
+        base = p.BaseFolder or ""
+    except Exception:
+        pass
+    return (
+        "{\"name\":\"%s\",\"baseFolder\":\"%s\",\"mode\":\"%s\","
+        "\"useFolder\":%s,\"useFileName\":%s,\"copyMode\":%s,\"moveFileless\":%s}"
+    ) % (
+        _json_esc(name),
+        _json_esc(base),
+        _json_esc(mode),
+        _json_bool(bool(getattr(p, "UseFolder", True))),
+        _json_bool(bool(getattr(p, "UseFileName", True))),
+        _json_bool(bool(getattr(p, "CopyMode", True))),
+        _json_bool(bool(getattr(p, "MoveFileless", False))),
+    )
+
+
 def _write_spa_bridge(profiles, lastused):
-    """Serialize a lightweight profile overview for the Configure SPA."""
-    items = []
-    for name in profiles.keys():
-        p = profiles[name]
-        base = ""
-        try:
-            base = p.BaseFolder or ""
-        except Exception:
-            pass
-        items.append({"name": name, "baseFolder": base})
-    def esc(s):
-        if s is None:
-            return ""
-        return str(s).replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "")
+    """Serialize profile overview fields for the Configure SPA (Phase B)."""
     parts = []
-    for it in items:
-        parts.append("{\"name\":\"%s\",\"baseFolder\":\"%s\"}" % (esc(it["name"]), esc(it["baseFolder"])))
+    for name in profiles.keys():
+        parts.append(_profile_overview_item(name, profiles[name]))
     last_name = ""
     if lastused:
         try:
             last_name = lastused[0] if hasattr(lastused, "__getitem__") else lastused
         except Exception:
             last_name = str(lastused)
-    selected = esc(last_name) if last_name else (esc(items[0]["name"]) if items else "")
-    body = "{\"version\":\"2.2.0\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\",\"openClassic\":false,\"profiles\":[%s]}" % (
-        esc(last_name), selected, ",".join(parts))
+    selected = _json_esc(last_name) if last_name else (_json_esc(profiles.keys()[0]) if len(profiles) else "")
+    body = (
+        "{\"version\":\"2.2.1\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\","
+        "\"openClassic\":false,\"saveOverview\":false,\"profiles\":[%s]}"
+    ) % (_json_esc(last_name), selected, ",".join(parts))
     File.WriteAllText(_bridge_path(), body)
+
+
+def _bridge_extract_string(text, key):
+    marker = "\"%s\":\"" % key
+    idx = text.find(marker)
+    if idx < 0:
+        return None
+    start = idx + len(marker)
+    end = start
+    while end < len(text):
+        if text[end] == "\\" and end + 1 < len(text):
+            end += 2
+            continue
+        if text[end] == "\"":
+            break
+        end += 1
+    if end > start:
+        return text[start:end].replace("\\\"", "\"").replace("\\\\", "\\")
+    return None
+
+
+def _bridge_extract_bool(text, key):
+    compact = text.replace(" ", "")
+    if "\"%s\":true" % key in compact:
+        return True
+    if "\"%s\":false" % key in compact:
+        return False
+    return None
 
 
 def _read_spa_bridge():
@@ -144,19 +196,62 @@ def _read_spa_bridge():
         return None
     try:
         text = File.ReadAllText(path)
-        # Minimal parse for openClassic and selectedProfile
-        open_classic = "\"openClassic\":true" in text.replace(" ", "")
-        selected = None
-        marker = "\"selectedProfile\":\""
-        idx = text.find(marker)
-        if idx >= 0:
-            start = idx + len(marker)
-            end = text.find("\"", start)
-            if end > start:
-                selected = text[start:end]
-        return {"openClassic": open_classic, "selectedProfile": selected, "raw": text}
+        return {
+            "openClassic": _bridge_extract_bool(text, "openClassic") is True,
+            "saveOverview": _bridge_extract_bool(text, "saveOverview") is True,
+            "selectedProfile": _bridge_extract_string(text, "selectedProfile"),
+            "raw": text,
+        }
     except Exception:
         return None
+
+
+def _apply_overview_from_bridge(profiles, bridge):
+    """Apply SPA overview edits to Profile objects. Returns True if saved."""
+    if not bridge or not bridge.get("saveOverview"):
+        return False
+    text = bridge.get("raw") or ""
+    # Walk each known profile and patch fields from the JSON blob by name.
+    for name in list(profiles.keys()):
+        marker = "\"name\":\"%s\"" % _json_esc(name)
+        idx = text.find(marker)
+        if idx < 0:
+            continue
+        # Limit slice to this object (until next profile or end of array)
+        slice_end = text.find("{\"name\":", idx + 1)
+        if slice_end < 0:
+            slice_end = text.find("]", idx)
+        if slice_end < 0:
+            slice_end = len(text)
+        chunk = text[idx:slice_end]
+        p = profiles[name]
+        base = _bridge_extract_string(chunk, "baseFolder")
+        if base is not None:
+            p.BaseFolder = base
+        mode = _bridge_extract_string(chunk, "mode")
+        if mode in (Mode.Move, Mode.Copy, Mode.Simulate):
+            p.Mode = mode
+        uf = _bridge_extract_bool(chunk, "useFolder")
+        if uf is not None:
+            p.UseFolder = uf
+        un = _bridge_extract_bool(chunk, "useFileName")
+        if un is not None:
+            p.UseFileName = un
+        cm = _bridge_extract_bool(chunk, "copyMode")
+        if cm is not None:
+            p.CopyMode = cm
+        mf = _bridge_extract_bool(chunk, "moveFileless")
+        if mf is not None:
+            p.MoveFileless = mf
+
+    selected = bridge.get("selectedProfile")
+    lastused = [selected] if selected else [profiles.keys()[0]]
+    save_profiles(PROFILEFILE, profiles, lastused)
+    try:
+        save_last_used(PROFILEFILE, lastused)
+    except Exception:
+        pass
+    return True
 
 
 def _try_spa_configure():
@@ -173,11 +268,13 @@ def _try_spa_configure():
         if bridge and bridge.get("openClassic"):
             books = ComicRack.App.GetLibraryBooks()
             show_config_form(profiles, lastused, books)
-        elif bridge and bridge.get("selectedProfile"):
-            try:
-                save_last_used(PROFILEFILE, [bridge["selectedProfile"]])
-            except Exception:
-                pass
+        else:
+            _apply_overview_from_bridge(profiles, bridge)
+            if bridge and bridge.get("selectedProfile") and not bridge.get("saveOverview"):
+                try:
+                    save_last_used(PROFILEFILE, [bridge["selectedProfile"]])
+                except Exception:
+                    pass
         return True
     except Exception, ex:
         print "SPA Configure failed; falling back to WinForms"
