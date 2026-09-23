@@ -16,9 +16,13 @@
       <h2>Profiles</h2>
       <ul id="profiles"></ul>
     </section>
-    <section id="overview" class="card">
+    <nav class="tabs">
+      <button type="button" class="tab active" data-tab="overview">Overview</button>
+      <button type="button" class="tab" data-tab="options">Options</button>
+    </nav>
+    <section id="panel-overview" class="card panel">
       <h2>Overview</h2>
-      <p class="hint">Phase B — edit overview for the selected profile. Files/Folders/Rules still use classic Configure.</p>
+      <p class="hint">Phase B — path organization basics.</p>
       <label>Base folder
         <input id="baseFolder" type="text" />
       </label>
@@ -33,8 +37,25 @@
       <label class="check"><input id="copyMode" type="checkbox" /> Copy custom thumbnails / related (copy mode)</label>
       <label class="check"><input id="moveFileless" type="checkbox" /> Move fileless books</label>
     </section>
+    <section id="panel-options" class="card panel hidden">
+      <h2>Options</h2>
+      <p class="hint">Phase C — common Options scalars. Empty-value substitutions &amp; exception lists: use classic Configure.</p>
+      <label class="check"><input id="dontAskWhenMultiOne" type="checkbox" /> Do not ask when multiple comics in one file</label>
+      <label class="check"><input id="removeEmptyFolder" type="checkbox" /> Remove empty folders</label>
+      <label>Empty folder name
+        <input id="emptyFolder" type="text" />
+      </label>
+      <label>Fileless image format
+        <input id="filelessFormat" type="text" placeholder=".jpg" />
+      </label>
+      <label class="check"><input id="failEmptyValues" type="checkbox" /> Fail when empty values</label>
+      <label class="check"><input id="moveFailed" type="checkbox" /> Move failed books to folder</label>
+      <label>Failed folder
+        <input id="failedFolder" type="text" />
+      </label>
+    </section>
     <section class="actions">
-      <button type="button" id="btnSave">Save overview</button>
+      <button type="button" id="btnSave">Save</button>
       <button type="button" id="btnClassic" class="secondary">Open classic Configure…</button>
       <button type="button" id="btnClose" class="secondary">Close</button>
     </section>

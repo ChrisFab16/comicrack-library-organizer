@@ -129,9 +129,27 @@ def _profile_overview_item(name, p):
         base = p.BaseFolder or ""
     except Exception:
         pass
+    empty_folder = ""
+    try:
+        empty_folder = p.EmptyFolder or ""
+    except Exception:
+        pass
+    fileless = ".jpg"
+    try:
+        fileless = p.FilelessFormat or ".jpg"
+    except Exception:
+        pass
+    failed = ""
+    try:
+        failed = p.FailedFolder or ""
+    except Exception:
+        pass
     return (
         "{\"name\":\"%s\",\"baseFolder\":\"%s\",\"mode\":\"%s\","
-        "\"useFolder\":%s,\"useFileName\":%s,\"copyMode\":%s,\"moveFileless\":%s}"
+        "\"useFolder\":%s,\"useFileName\":%s,\"copyMode\":%s,\"moveFileless\":%s,"
+        "\"dontAskWhenMultiOne\":%s,\"removeEmptyFolder\":%s,"
+        "\"emptyFolder\":\"%s\",\"filelessFormat\":\"%s\","
+        "\"failEmptyValues\":%s,\"moveFailed\":%s,\"failedFolder\":\"%s\"}"
     ) % (
         _json_esc(name),
         _json_esc(base),
@@ -140,11 +158,18 @@ def _profile_overview_item(name, p):
         _json_bool(bool(getattr(p, "UseFileName", True))),
         _json_bool(bool(getattr(p, "CopyMode", True))),
         _json_bool(bool(getattr(p, "MoveFileless", False))),
+        _json_bool(bool(getattr(p, "DontAskWhenMultiOne", True))),
+        _json_bool(bool(getattr(p, "RemoveEmptyFolder", True))),
+        _json_esc(empty_folder),
+        _json_esc(fileless),
+        _json_bool(bool(getattr(p, "FailEmptyValues", False))),
+        _json_bool(bool(getattr(p, "MoveFailed", False))),
+        _json_esc(failed),
     )
 
 
 def _write_spa_bridge(profiles, lastused):
-    """Serialize profile overview fields for the Configure SPA (Phase B)."""
+    """Serialize profile Overview + Options fields for the Configure SPA (Phase C)."""
     parts = []
     for name in profiles.keys():
         parts.append(_profile_overview_item(name, profiles[name]))
@@ -156,7 +181,7 @@ def _write_spa_bridge(profiles, lastused):
             last_name = str(lastused)
     selected = _json_esc(last_name) if last_name else (_json_esc(profiles.keys()[0]) if len(profiles) else "")
     body = (
-        "{\"version\":\"2.2.1\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\","
+        "{\"version\":\"2.2.2\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\","
         "\"openClassic\":false,\"saveOverview\":false,\"profiles\":[%s]}"
     ) % (_json_esc(last_name), selected, ",".join(parts))
     File.WriteAllText(_bridge_path(), body)
@@ -243,6 +268,27 @@ def _apply_overview_from_bridge(profiles, bridge):
         mf = _bridge_extract_bool(chunk, "moveFileless")
         if mf is not None:
             p.MoveFileless = mf
+        da = _bridge_extract_bool(chunk, "dontAskWhenMultiOne")
+        if da is not None:
+            p.DontAskWhenMultiOne = da
+        re = _bridge_extract_bool(chunk, "removeEmptyFolder")
+        if re is not None:
+            p.RemoveEmptyFolder = re
+        ef = _bridge_extract_string(chunk, "emptyFolder")
+        if ef is not None:
+            p.EmptyFolder = ef
+        ff = _bridge_extract_string(chunk, "filelessFormat")
+        if ff is not None:
+            p.FilelessFormat = ff
+        fe = _bridge_extract_bool(chunk, "failEmptyValues")
+        if fe is not None:
+            p.FailEmptyValues = fe
+        mv = _bridge_extract_bool(chunk, "moveFailed")
+        if mv is not None:
+            p.MoveFailed = mv
+        fd = _bridge_extract_string(chunk, "failedFolder")
+        if fd is not None:
+            p.FailedFolder = fd
 
     selected = bridge.get("selectedProfile")
     lastused = [selected] if selected else [profiles.keys()[0]]
