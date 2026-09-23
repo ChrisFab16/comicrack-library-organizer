@@ -2,10 +2,13 @@
 
 | Gate | Result | Notes |
 |------|--------|-------|
-| SC-001 SPA opens on CE | pending | Install 2.2.0; Configure → SPA profile list |
-| SC-002 Classic fallback / open classic | pending | Button or non-CE host |
+| SC-001 SPA opens on CE | **PASS** | Operator sign-off 2026-09-23 |
+| SC-002 Classic fallback / open classic | **PASS** | Operator sign-off 2026-09-23 |
 | SC-003 Version / package | **PASS** | 2.2.0 + plugin.json + ui/dist |
 
-## Install (CE Debug)
+**Tester**: operator  
+**Host**: ComicRack CE Debug (WebView2 Host API / ShowWebConfigure)
 
-Copy package folder to `%AppData%\cYo\ComicRack Community Edition\Scripts\Library Organizer\` (replace; keep `losettingsx.dat`). Restart. Preferences Configure on Library Organizer.
+## Install note
+
+AppData `Scripts\Library Organizer\` (keep `losettingsx.dat`). Restart after update.
