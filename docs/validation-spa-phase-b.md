@@ -2,10 +2,9 @@
 
 | Gate | Result | Notes |
 |------|--------|-------|
-| SC-B1 BaseFolder save | pending | Edit path → Save overview → reopen |
-| SC-B2 Mode persist | pending | Move/Copy/Simulate |
-| SC-B3 Classic still works | pending | Open classic Configure… |
+| SC-B1 BaseFolder save | **PASS** | Operator sign-off 2026-09-23 |
+| SC-B2 Mode persist | **PASS** | Operator sign-off 2026-09-23 |
+| SC-B3 Classic still works | **PASS** | Operator sign-off 2026-09-23 |
 
-## Install
-
-Copy updated `libraryorganizer.py`, `Package.ini`, `ui/dist/*`, `plugin.json` into AppData Library Organizer. Restart CE.
+**Tester**: operator  
+**Host**: ComicRack CE Debug (ShowWebConfigure / Host API v1)
