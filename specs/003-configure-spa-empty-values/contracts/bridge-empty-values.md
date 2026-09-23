@@ -7,7 +7,7 @@
 
 | Key | Type | Notes |
 |-----|------|-------|
-| `version` | string | `"2.2.3"` |
+| `version` | string | `"2.2.4"` |
 | `lastUsed` | string | |
 | `selectedProfile` | string | |
 | `openClassic` | bool | |

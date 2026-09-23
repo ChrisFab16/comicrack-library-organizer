@@ -4,7 +4,7 @@
 
 ## Summary
 
-Extend the existing Configure SPA (Phases A–C) with an **Empty values** tab and bridge fields for `EmptyData`, `FailedFields`, and `ExcludedEmptyFolder`. Reuse `_write_spa_bridge` / `_apply_overview_from_bridge` / Host API `host.config.set` close path. Bump package to **2.2.3**.
+Extend the existing Configure SPA (Phases A–C) with an **Empty values** tab and bridge fields for `EmptyData`, `FailedFields`, and `ExcludedEmptyFolder`. Reuse `_write_spa_bridge` / `_apply_overview_from_bridge` / Host API `host.config.set` close path. Bump package to **2.2.4**.
 
 ## Technical Context
 
@@ -61,6 +61,7 @@ See [contracts/bridge-empty-values.md](./contracts/bridge-empty-values.md).
 | Hand-rolled JSON breaks on `\` in paths | Reuse `_json_esc`; add quickstart path with backslash |
 | Field label drift vs classic | Copy catalogs from `configureform.py` lists into SPA constants |
 | Large EmptyData blobs | Only non-empty entries need write; apply replaces map keys present in bridge |
+| Profile chunk truncated at first `]` (SC-D1) | `_bridge_profile_chunk` brace-matches full object (2.2.4) |
 
 ## Test Strategy
 

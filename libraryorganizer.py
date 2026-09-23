@@ -224,7 +224,7 @@ def _write_spa_bridge(profiles, lastused):
             last_name = str(lastused)
     selected = _json_esc(last_name) if last_name else (_json_esc(profiles.keys()[0]) if len(profiles) else "")
     body = (
-        "{\"version\":\"2.2.3\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\","
+        "{\"version\":\"2.2.4\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\","
         "\"openClassic\":false,\"saveOverview\":false,\"profiles\":[%s]}"
     ) % (_json_esc(last_name), selected, ",".join(parts))
     File.WriteAllText(_bridge_path(), body)
@@ -340,6 +340,49 @@ def _bridge_extract_empty_data(text):
     return result
 
 
+def _bridge_profile_chunk(text, name):
+    """Return the full JSON object text for a profile by name (brace-matched).
+
+    Must not slice on the first ']' — Phase D arrays (emptyData, etc.) contain
+    brackets inside the profile object.
+    """
+    marker = "\"name\":\"%s\"" % _json_esc(name)
+    idx = text.find(marker)
+    if idx < 0:
+        return None
+    start = idx
+    while start > 0 and text[start] != "{":
+        start -= 1
+    if text[start] != "{":
+        return None
+    depth = 0
+    end = start
+    while end < len(text):
+        ch = text[end]
+        if ch == "\\" and end + 1 < len(text):
+            end += 2
+            continue
+        if ch == "\"":
+            end += 1
+            while end < len(text):
+                if text[end] == "\\" and end + 1 < len(text):
+                    end += 2
+                    continue
+                if text[end] == "\"":
+                    end += 1
+                    break
+                end += 1
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : end + 1]
+        end += 1
+    return None
+
+
 def _read_spa_bridge():
     path = _bridge_path()
     if not File.Exists(path):
@@ -363,17 +406,9 @@ def _apply_overview_from_bridge(profiles, bridge):
     text = bridge.get("raw") or ""
     # Walk each known profile and patch fields from the JSON blob by name.
     for name in list(profiles.keys()):
-        marker = "\"name\":\"%s\"" % _json_esc(name)
-        idx = text.find(marker)
-        if idx < 0:
+        chunk = _bridge_profile_chunk(text, name)
+        if not chunk:
             continue
-        # Limit slice to this object (until next profile or end of array)
-        slice_end = text.find("{\"name\":", idx + 1)
-        if slice_end < 0:
-            slice_end = text.find("]", idx)
-        if slice_end < 0:
-            slice_end = len(text)
-        chunk = text[idx:slice_end]
         p = profiles[name]
         base = _bridge_extract_string(chunk, "baseFolder")
         if base is not None:

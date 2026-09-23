@@ -3,7 +3,7 @@
 **Feature Branch**: `configure-spa-phase-d`  
 **Created**: 2026-09-23  
 **Status**: Draft  
-**Package version**: 2.2.3  
+**Package version**: 2.2.4  
 **Depends on**: Configure SPA Phases A–C (2.2.0–2.2.2) on `hidpi-configure-form`  
 **Host**: ComicRack CE with WebView2 Host API v1 (`ShowWebConfigure`)
 
@@ -79,6 +79,7 @@ Files/Folders/Rules and any unported Options chrome remain available via **Open 
 - Paths with backslashes / quotes escape correctly in bridge JSON.
 - Profile switch mid-edit keeps per-profile empty maps without cross-bleed.
 - Host without `ShowWebConfigure` still opens classic only (no regression).
+- **Profile chunk slicing MUST brace-match the object** — must not truncate at the first `]` (arrays inside `emptyData` / `failedFields` / `excludedEmptyFolder`). Regression: SC-D1 failed when slice used `find("]")`.
 
 ## Requirements *(mandatory)*
 
@@ -91,7 +92,7 @@ Files/Folders/Rules and any unported Options chrome remain available via **Open 
 - **FR-005**: On Save (`saveOverview: true`), Python MUST apply Empty values fields together with existing Overview/Options apply path and call `save_profiles`.
 - **FR-006**: SPA MUST offer the same substitution field labels as classic `empty_substitution_items` and failed-field labels as classic `failed_items` (mapped via `name_to_field` / `field_to_name`).
 - **FR-007**: Files template, Folders template, Rules, IllegalCharacters, Months, and ExcludeFolders (folder-rules exclude list) remain **out of scope** (classic only).
-- **FR-008**: Package version MUST bump to **2.2.3**; changelog + validation doc updated.
+- **FR-008**: Package version MUST bump to **2.2.4**; changelog + validation doc updated.
 
 ### Non-Functional
 

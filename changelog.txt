@@ -1,3 +1,8 @@
+2.2.4
+
+Fixed:
+Configure SPA Save — profile JSON chunk no longer truncates at first ']' inside emptyData arrays; Empty values (SC-D1) now persist.
+
 ﻿2.2.3
 
 New:

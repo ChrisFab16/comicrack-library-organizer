@@ -2,7 +2,7 @@
 
 **Input**: `specs/003-configure-spa-empty-values/`  
 **Branch**: `configure-spa-phase-d`  
-**Package**: 2.2.3
+**Package**: 2.2.4
 
 ## Phase 1: Setup
 
@@ -15,7 +15,7 @@
 - [x] T004 [P] Extend `_profile_overview_item` to emit `emptyData`, `failedFields`, `excludedEmptyFolder`
 - [x] T005 [P] Add `_bridge_extract_string_list` and `_bridge_extract_empty_data` parsers
 - [x] T006 [P] Extend `_apply_overview_from_bridge` to apply Empty values properties (FR-002–FR-005)
-- [x] T007 Bump bridge `version` string to `2.2.3`
+- [x] T007 Bump bridge `version` string to `2.2.4`
 
 ## Phase 3: US1 — Empty substitutions (P1)
 
@@ -35,11 +35,12 @@
 
 ## Phase 6: Polish & ship
 
-- [x] T040 Bump `Package.ini`, `plugin.json`, `configureform.py` VERSION, `changelog.txt` to 2.2.3 (FR-008)
+- [x] T040 Bump `Package.ini`, `plugin.json`, `configureform.py` VERSION, `changelog.txt` to 2.2.4 (FR-008)
 - [x] T041 Write `docs/validation-spa-phase-d.md` (pending operator)
 - [x] T042 Copy package to AppData Scripts for operator smoke
 - [x] T043 Push branch; open fork PR to `hidpi-configure-form`
 - [ ] T044 Operator SC-D1–D4 per [quickstart.md](./quickstart.md)
+- [x] T045 Fix `_bridge_profile_chunk` brace-matching (SC-D1: emptyData truncated at first `]`); bump **2.2.4**; reinstall AppData
 
 ## Dependencies
 

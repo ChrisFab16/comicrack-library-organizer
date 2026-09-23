@@ -1,12 +1,12 @@
 # Quickstart: Configure SPA Phase D
 
-**Package**: 2.2.3  
+**Package**: 2.2.4  
 **Host**: ComicRack CE Debug with WebView2
 
 ## Install
 
 1. Copy plugin folder to `%AppData%\cYo\ComicRack Community Edition\Scripts\Library Organizer\` (or Packages path used by operator).
-2. Confirm `Package.ini` / `plugin.json` Version **2.2.3**.
+2. Confirm `Package.ini` / `plugin.json` Version **2.2.4**.
 3. Restart ComicRack CE if script already loaded.
 
 ## SC-D1 — Empty substitution
