@@ -118,6 +118,30 @@ def _json_bool(v):
     return "true" if v else "false"
 
 
+def _json_string_list(items):
+    """Serialize a sequence of strings as a JSON array."""
+    parts = []
+    if items:
+        for item in items:
+            parts.append("\"%s\"" % _json_esc(item))
+    return "[%s]" % ",".join(parts)
+
+
+def _json_empty_data(empty_data):
+    """Serialize EmptyData dict as [{field,value}, ...]."""
+    parts = []
+    if empty_data:
+        for key in empty_data.keys():
+            val = empty_data[key]
+            if val is None:
+                val = ""
+            parts.append(
+                "{\"field\":\"%s\",\"value\":\"%s\"}"
+                % (_json_esc(str(key)), _json_esc(str(val)))
+            )
+    return "[%s]" % ",".join(parts)
+
+
 def _profile_overview_item(name, p):
     mode = Mode.Move
     try:
@@ -144,12 +168,28 @@ def _profile_overview_item(name, p):
         failed = p.FailedFolder or ""
     except Exception:
         pass
+    empty_data = {}
+    try:
+        empty_data = getattr(p, "EmptyData", None) or {}
+    except Exception:
+        empty_data = {}
+    failed_fields = []
+    try:
+        failed_fields = list(getattr(p, "FailedFields", None) or [])
+    except Exception:
+        failed_fields = []
+    excluded_empty = []
+    try:
+        excluded_empty = list(getattr(p, "ExcludedEmptyFolder", None) or [])
+    except Exception:
+        excluded_empty = []
     return (
         "{\"name\":\"%s\",\"baseFolder\":\"%s\",\"mode\":\"%s\","
         "\"useFolder\":%s,\"useFileName\":%s,\"copyMode\":%s,\"moveFileless\":%s,"
         "\"dontAskWhenMultiOne\":%s,\"removeEmptyFolder\":%s,"
         "\"emptyFolder\":\"%s\",\"filelessFormat\":\"%s\","
-        "\"failEmptyValues\":%s,\"moveFailed\":%s,\"failedFolder\":\"%s\"}"
+        "\"failEmptyValues\":%s,\"moveFailed\":%s,\"failedFolder\":\"%s\","
+        "\"emptyData\":%s,\"failedFields\":%s,\"excludedEmptyFolder\":%s}"
     ) % (
         _json_esc(name),
         _json_esc(base),
@@ -165,11 +205,14 @@ def _profile_overview_item(name, p):
         _json_bool(bool(getattr(p, "FailEmptyValues", False))),
         _json_bool(bool(getattr(p, "MoveFailed", False))),
         _json_esc(failed),
+        _json_empty_data(empty_data),
+        _json_string_list(failed_fields),
+        _json_string_list(excluded_empty),
     )
 
 
 def _write_spa_bridge(profiles, lastused):
-    """Serialize profile Overview + Options fields for the Configure SPA (Phase C)."""
+    """Serialize profile Overview + Options + Empty values for the Configure SPA (Phase D)."""
     parts = []
     for name in profiles.keys():
         parts.append(_profile_overview_item(name, profiles[name]))
@@ -181,7 +224,7 @@ def _write_spa_bridge(profiles, lastused):
             last_name = str(lastused)
     selected = _json_esc(last_name) if last_name else (_json_esc(profiles.keys()[0]) if len(profiles) else "")
     body = (
-        "{\"version\":\"2.2.2\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\","
+        "{\"version\":\"2.2.3\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\","
         "\"openClassic\":false,\"saveOverview\":false,\"profiles\":[%s]}"
     ) % (_json_esc(last_name), selected, ",".join(parts))
     File.WriteAllText(_bridge_path(), body)
@@ -213,6 +256,88 @@ def _bridge_extract_bool(text, key):
     if "\"%s\":false" % key in compact:
         return False
     return None
+
+
+def _bridge_array_body(text, key):
+    """Return the inner text of a JSON array value for key, or None if missing."""
+    marker = "\"%s\":[" % key
+    idx = text.find(marker)
+    if idx < 0:
+        return None
+    start = idx + len(marker)
+    depth = 1
+    end = start
+    while end < len(text) and depth > 0:
+        ch = text[end]
+        if ch == "\\" and end + 1 < len(text):
+            end += 2
+            continue
+        if ch == "\"":
+            end += 1
+            while end < len(text):
+                if text[end] == "\\" and end + 1 < len(text):
+                    end += 2
+                    continue
+                if text[end] == "\"":
+                    end += 1
+                    break
+                end += 1
+            continue
+        if ch == "[":
+            depth += 1
+        elif ch == "]":
+            depth -= 1
+            if depth == 0:
+                return text[start:end]
+        end += 1
+    return None
+
+
+def _bridge_extract_string_list(text, key):
+    """Parse a JSON string array. Returns None if key absent, else a list (possibly empty)."""
+    body = _bridge_array_body(text, key)
+    if body is None:
+        return None
+    items = []
+    i = 0
+    n = len(body)
+    while i < n:
+        if body[i] != "\"":
+            i += 1
+            continue
+        i += 1
+        start = i
+        while i < n:
+            if body[i] == "\\" and i + 1 < n:
+                i += 2
+                continue
+            if body[i] == "\"":
+                break
+            i += 1
+        raw = body[start:i]
+        items.append(raw.replace("\\\"", "\"").replace("\\\\", "\\"))
+        i += 1
+    return items
+
+
+def _bridge_extract_empty_data(text):
+    """Parse emptyData array of {field,value} into a dict. None if key absent."""
+    body = _bridge_array_body(text, "emptyData")
+    if body is None:
+        return None
+    result = {}
+    # Walk objects in the array
+    search_from = 0
+    while True:
+        fidx = body.find("\"field\":\"", search_from)
+        if fidx < 0:
+            break
+        field = _bridge_extract_string(body[fidx:], "field")
+        value = _bridge_extract_string(body[fidx:], "value")
+        if field is not None:
+            result[field] = value if value is not None else ""
+        search_from = fidx + 8
+    return result
 
 
 def _read_spa_bridge():
@@ -289,6 +414,15 @@ def _apply_overview_from_bridge(profiles, bridge):
         fd = _bridge_extract_string(chunk, "failedFolder")
         if fd is not None:
             p.FailedFolder = fd
+        empty_data = _bridge_extract_empty_data(chunk)
+        if empty_data is not None:
+            p.EmptyData = empty_data
+        failed_fields = _bridge_extract_string_list(chunk, "failedFields")
+        if failed_fields is not None:
+            p.FailedFields = failed_fields
+        excluded = _bridge_extract_string_list(chunk, "excludedEmptyFolder")
+        if excluded is not None:
+            p.ExcludedEmptyFolder = excluded
 
     selected = bridge.get("selectedProfile")
     lastused = [selected] if selected else [profiles.keys()[0]]

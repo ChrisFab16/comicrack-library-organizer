@@ -19,10 +19,11 @@
     <nav class="tabs">
       <button type="button" class="tab active" data-tab="overview">Overview</button>
       <button type="button" class="tab" data-tab="options">Options</button>
+      <button type="button" class="tab" data-tab="empty">Empty values</button>
     </nav>
     <section id="panel-overview" class="card panel">
       <h2>Overview</h2>
-      <p class="hint">Phase B — path organization basics.</p>
+      <p class="hint">Path organization basics.</p>
       <label>Base folder
         <input id="baseFolder" type="text" />
       </label>
@@ -39,7 +40,7 @@
     </section>
     <section id="panel-options" class="card panel hidden">
       <h2>Options</h2>
-      <p class="hint">Phase C — common Options scalars. Empty-value substitutions &amp; exception lists: use classic Configure.</p>
+      <p class="hint">Common Options scalars. Files / Rules / illegal characters: use classic Configure.</p>
       <label class="check"><input id="dontAskWhenMultiOne" type="checkbox" /> Do not ask when multiple comics in one file</label>
       <label class="check"><input id="removeEmptyFolder" type="checkbox" /> Remove empty folders</label>
       <label>Empty folder name
@@ -53,6 +54,28 @@
       <label>Failed folder
         <input id="failedFolder" type="text" />
       </label>
+    </section>
+    <section id="panel-empty" class="card panel hidden">
+      <h2>Empty values</h2>
+      <p class="hint">Phase D — substitutions, failed-field checklist, empty-folder exceptions.</p>
+      <label>When a field is empty, substitute
+        <select id="emptyField"></select>
+      </label>
+      <label>Substitute value
+        <input id="emptyValue" type="text" />
+      </label>
+      <fieldset>
+        <legend>Fail when these fields are empty</legend>
+        <div id="failedFields" class="checklist"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Do not remove these empty folders</legend>
+        <ul id="excludedList" class="plain-list"></ul>
+        <div class="row">
+          <input id="excludedPath" type="text" placeholder="C:\path\to\keep" />
+          <button type="button" id="btnAddExcluded" class="secondary">Add</button>
+        </div>
+      </fieldset>
     </section>
     <section class="actions">
       <button type="button" id="btnSave">Save</button>
