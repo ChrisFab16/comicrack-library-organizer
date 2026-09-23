@@ -38,7 +38,7 @@
 - [x] T040 Bump `Package.ini`, `plugin.json`, `configureform.py` VERSION, `changelog.txt` to 2.2.3 (FR-008)
 - [x] T041 Write `docs/validation-spa-phase-d.md` (pending operator)
 - [x] T042 Copy package to AppData Scripts for operator smoke
-- [ ] T043 Push branch; open fork PR to `hidpi-configure-form`
+- [x] T043 Push branch; open fork PR to `hidpi-configure-form`
 - [ ] T044 Operator SC-D1–D4 per [quickstart.md](./quickstart.md)
 
 ## Dependencies
