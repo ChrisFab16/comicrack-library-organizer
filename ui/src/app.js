@@ -67,7 +67,7 @@
   const hostMeta = document.getElementById("hostMeta");
   const list = document.getElementById("profiles");
   let state = {
-    version: "2.2.5",
+    version: "2.2.6",
     lastUsed: "",
     profiles: [],
     selectedProfile: "",

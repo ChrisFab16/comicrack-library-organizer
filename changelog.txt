@@ -1,3 +1,8 @@
+2.2.6
+
+New:
+Configure shows an immediate wait dialog (marquee) while SPA or classic Configure opens.
+
 2.2.5
 
 Fixed:

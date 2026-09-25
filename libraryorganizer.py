@@ -27,7 +27,13 @@ import System.IO
 from System.IO import File, StreamReader, StreamWriter
 
 clr.AddReference("System.Windows.Forms")
-from System.Windows.Forms import DialogResult, MessageBox, MessageBoxButtons, MessageBoxIcon
+from System.Windows.Forms import (
+    Application, DialogResult, Form, FormBorderStyle, FormStartPosition,
+    Label, MessageBox, MessageBoxButtons, MessageBoxIcon, ProgressBar,
+    ProgressBarStyle
+)
+from System.Drawing import Size, Font, FontStyle, SystemFonts, ContentAlignment
+
 
 clr.AddReference("System.Xml")
 import System.Xml
@@ -74,17 +80,19 @@ def LibraryOrganizer(books):
 #@Name Configure Library Organizer
 #@Hook Library
 #@Image libraryorganizer.png
-def ConfigureLibraryOrganizer(books):
+def ConfigureLibraryOrganizer(books, wait=None):
     try:
         locommon.ComicRack = ComicRack
         lobookmover.ComicRack = ComicRack
         profiles, lastused = load_profiles(PROFILEFILE)
         if books is None:
             # Library hook: load books for preview. ConfigScript fallback passes [].
+            _set_wait_message(wait, "Loading library books…")
             books = ComicRack.App.GetLibraryBooks()
-        show_config_form(profiles, lastused, books)
+        show_config_form(profiles, lastused, books, wait)
         
     except Exception, ex:
+        _close_wait_form(wait)
         print "The Following error occured"
         print Exception
         MessageBox.Show(str(ex))
@@ -93,10 +101,79 @@ def ConfigureLibraryOrganizer(books):
 #@Key library-organizer-main
 #@Hook ConfigScript
 def ConfigLibraryOrganizer():
-    if _try_spa_configure():
+    wait = _show_wait_form("Opening Configure…")
+    try:
+        if _try_spa_configure(wait):
+            wait = None  # closed inside before ShowWebConfigure
+            return
+        _set_wait_message(wait, "Loading classic Configure…")
+        # Do not call GetLibraryBooks here — large libraries make classic Configure look hung.
+        ConfigureLibraryOrganizer([], wait)
+        wait = None  # closed inside show_config_form before ShowDialog
+    finally:
+        _close_wait_form(wait)
+
+
+def _show_wait_form(message):
+    """Top-most wait banner so Configure never appears to do nothing."""
+    try:
+        f = Form()
+        f.Text = "Library Organizer"
+        f.FormBorderStyle = FormBorderStyle.FixedDialog
+        f.ControlBox = False
+        f.ShowInTaskbar = False
+        f.StartPosition = FormStartPosition.CenterScreen
+        f.TopMost = True
+        f.MinimizeBox = False
+        f.MaximizeBox = False
+        f.Size = Size(400, 120)
+        lbl = Label()
+        lbl.Text = message
+        lbl.Dock = System.Windows.Forms.DockStyle.Fill
+        lbl.TextAlign = ContentAlignment.MiddleCenter
+        try:
+            lbl.Font = Font(SystemFonts.MessageBoxFont.FontFamily, 10, FontStyle.Regular)
+        except Exception:
+            pass
+        bar = ProgressBar()
+        bar.Style = ProgressBarStyle.Marquee
+        bar.MarqueeAnimationSpeed = 30
+        bar.Dock = System.Windows.Forms.DockStyle.Bottom
+        bar.Height = 22
+        f.Controls.Add(lbl)
+        f.Controls.Add(bar)
+        f.Show()
+        Application.DoEvents()
+        return f
+    except Exception:
+        return None
+
+
+def _close_wait_form(f):
+    if f is None:
         return
-    # Do not call GetLibraryBooks here — large libraries make classic Configure look hung.
-    ConfigureLibraryOrganizer([])
+    try:
+        f.Close()
+        f.Dispose()
+    except Exception:
+        pass
+    try:
+        Application.DoEvents()
+    except Exception:
+        pass
+
+
+def _set_wait_message(f, message):
+    if f is None:
+        return
+    try:
+        for c in f.Controls:
+            if isinstance(c, Label):
+                c.Text = message
+                break
+        Application.DoEvents()
+    except Exception:
+        pass
 
 
 def _can_show_web_configure():
@@ -236,7 +313,7 @@ def _write_spa_bridge(profiles, lastused):
             last_name = str(lastused)
     selected = _json_esc(last_name) if last_name else (_json_esc(profiles.keys()[0]) if len(profiles) else "")
     body = (
-        "{\"version\":\"2.2.5\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\","
+        "{\"version\":\"2.2.6\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\","
         "\"openClassic\":false,\"saveOverview\":false,\"profiles\":[%s]}"
     ) % (_json_esc(last_name), selected, ",".join(parts))
     File.WriteAllText(_bridge_path(), body)
@@ -481,20 +558,24 @@ def _apply_overview_from_bridge(profiles, bridge):
     return True
 
 
-def _try_spa_configure():
+def _try_spa_configure(wait=None):
     """Open WebView2 SPA Configure when CE Host API is available. Returns True if handled."""
     if not _can_show_web_configure():
         return False
     try:
         locommon.ComicRack = ComicRack
         lobookmover.ComicRack = ComicRack
+        _set_wait_message(wait, "Preparing Configure…")
         profiles, lastused = load_profiles(PROFILEFILE)
         _write_spa_bridge(profiles, lastused)
+        # Close wait before modal SPA so it does not cover the Configure dialog.
+        _close_wait_form(wait)
+        wait = None
         ComicRack.ShowWebConfigure(SCRIPTDIRECTORY)
         bridge = _read_spa_bridge()
         if bridge and bridge.get("openClassic"):
-            books = ComicRack.App.GetLibraryBooks()
-            show_config_form(profiles, lastused, books)
+            books = []
+            show_config_form(profiles, lastused, books, None)
         else:
             _apply_overview_from_bridge(profiles, bridge)
             if bridge and bridge.get("selectedProfile") and not bridge.get("saveOverview"):
@@ -573,11 +654,13 @@ def LibraryOrganizerStartup():
     LibraryOrganizerQuick(books)
 
 
-def show_config_form(profiles, lastused, books):
+def show_config_form(profiles, lastused, books, wait=None):
     """Shows the configure form and saves the changes if the user press okay.
     Returns True if the user press Okay.
     Returns False if the user pressed cancel."""
+    _set_wait_message(wait, "Building Configure window…")
     configform = ConfigureForm(profiles, lastused[0], books)
+    _close_wait_form(wait)
     result = configform.ShowDialog()
     configform.save_profile()
     configform.Dispose()
