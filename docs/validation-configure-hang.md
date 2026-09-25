@@ -18,6 +18,12 @@ Clicking Library Organizer **Configure** appeared to do nothing or hang until th
 
 ## Operator now
 
-1. **Restart ComicRack CE** (new Plugins DLL already built into Debug).
-2. Configure should open **classic WinForms** immediately (`force-classic-configure` is present in AppData Scripts).
+1. **Restart ComicRack CE** (IronPython caches scripts — required after 2.2.7 ASCII fix).
+2. Configure should open **classic WinForms** immediately (`force-classic-configure` is present in AppData Scripts), with an **Opening Configure...** wait banner first.
 3. After confirming classic works: delete `%AppData%\cYo\ComicRack Community Edition\Scripts\Library Organizer\force-classic-configure` to resume SPA testing (SC-D*).
+
+## Follow-up (2026-09-25) — no window / no status
+
+**Root cause:** `libraryorganizer.py` contained Unicode ellipsis (`…`) and em dashes. IronPython 2.7 failed to import the module (no coding cookie / non-ASCII), so ConfigScript never ran and `catchErrors` hid the failure.
+
+**Fix:** 2.2.7 ASCII-only sources + MessageBox on Configure exceptions.
