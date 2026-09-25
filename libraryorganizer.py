@@ -75,15 +75,13 @@ def LibraryOrganizer(books):
 #@Hook Library
 #@Image libraryorganizer.png
 def ConfigureLibraryOrganizer(books):
-    if books is None and _try_spa_configure():
-        return
-    if books is None:
-        books = ComicRack.App.GetLibraryBooks()
     try:
         locommon.ComicRack = ComicRack
         lobookmover.ComicRack = ComicRack
         profiles, lastused = load_profiles(PROFILEFILE)
-
+        if books is None:
+            # Library hook: load books for preview. ConfigScript fallback passes [].
+            books = ComicRack.App.GetLibraryBooks()
         show_config_form(profiles, lastused, books)
         
     except Exception, ex:
@@ -97,11 +95,25 @@ def ConfigureLibraryOrganizer(books):
 def ConfigLibraryOrganizer():
     if _try_spa_configure():
         return
-    ConfigureLibraryOrganizer(None)
+    # Do not call GetLibraryBooks here — large libraries make classic Configure look hung.
+    ConfigureLibraryOrganizer([])
 
 
 def _can_show_web_configure():
-    return hasattr(ComicRack, "ShowWebConfigure")
+    """True when CE Host API is present and SPA Configure is not forced off.
+
+    Place an empty file named force-classic-configure next to this script to skip
+    WebView2 Configure (use when SPA hang/lock is suspected).
+    """
+    if not hasattr(ComicRack, "ShowWebConfigure"):
+        return False
+    try:
+        sentinel = System.IO.Path.Combine(SCRIPTDIRECTORY, "force-classic-configure")
+        if File.Exists(sentinel):
+            return False
+    except Exception:
+        pass
+    return True
 
 
 def _bridge_path():
@@ -224,7 +236,7 @@ def _write_spa_bridge(profiles, lastused):
             last_name = str(lastused)
     selected = _json_esc(last_name) if last_name else (_json_esc(profiles.keys()[0]) if len(profiles) else "")
     body = (
-        "{\"version\":\"2.2.4\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\","
+        "{\"version\":\"2.2.5\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\","
         "\"openClassic\":false,\"saveOverview\":false,\"profiles\":[%s]}"
     ) % (_json_esc(last_name), selected, ",".join(parts))
     File.WriteAllText(_bridge_path(), body)

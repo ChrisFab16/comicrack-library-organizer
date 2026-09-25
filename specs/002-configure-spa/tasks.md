@@ -27,8 +27,14 @@
 
 ## Out of scope (next Spec Kit feature)
 
-- Empty-value substitution map, exception lists, Files/Folders/Rules full SPA parity
+- Files/Folders/Rules full SPA parity
 - Automated CI for IronPython bridge (constitution: operator gates OK)
+
+## Remediation (2026-09-25) — Configure hang
+
+- [x] T046 ConfigScript classic fallback MUST NOT call `GetLibraryBooks()` (pass `[]`); remove double SPA attempt
+- [x] T047 `force-classic-configure` sentinel skips SPA; `hotReload: false`; bump **2.2.5**
+- [ ] T048 After CE UserDataFolder fix is running: remove AppData `force-classic-configure` and retest SPA SC-D1–D4
 
 ## Spec Kit process (from 2026-09-23)
 

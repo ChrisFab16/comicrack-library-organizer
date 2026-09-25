@@ -41,6 +41,8 @@
 - [x] T043 Push branch; open fork PR to `hidpi-configure-form`
 - [ ] T044 Operator SC-D1–D4 per [quickstart.md](./quickstart.md)
 - [x] T045 Fix `_bridge_profile_chunk` brace-matching (SC-D1: emptyData truncated at first `]`); bump **2.2.4**; reinstall AppData
+- [x] T046 Configure hang: ConfigScript classic fallback passes `[]` (no GetLibraryBooks); `force-classic-configure` sentinel; hotReload false; bump **2.2.5**
+- [ ] T047 After CE UserDataFolder fix: delete AppData `force-classic-configure`; retest SPA SC-D1–D4
 
 ## Dependencies
 

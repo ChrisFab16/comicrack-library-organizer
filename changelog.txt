@@ -1,3 +1,8 @@
+2.2.5
+
+Fixed:
+Configure hang — ConfigScript classic fallback no longer loads the entire library (GetLibraryBooks); optional force-classic-configure sentinel skips WebView2 SPA; hotReload disabled to avoid watcher churn.
+
 2.2.4
 
 Fixed:
