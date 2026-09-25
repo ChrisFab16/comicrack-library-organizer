@@ -1,4 +1,4 @@
-﻿"""
+"""
 This file loads some sample comics from a file and shows the config form.
 Simply for testing purposes.
 """

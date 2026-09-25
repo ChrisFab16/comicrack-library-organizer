@@ -1,3 +1,8 @@
+2.2.7
+
+Fixed:
+Configure did nothing - Unicode ellipsis/dashes in libraryorganizer.py broke IronPython 2.7 import. Sources are ASCII-only again; ConfigScript surfaces errors in a MessageBox.
+
 2.2.6
 
 New:

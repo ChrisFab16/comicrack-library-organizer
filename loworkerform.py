@@ -1,4 +1,4 @@
-﻿"""
+"""
 loworkerform.py
 
 Contains the worker form. All the copying is done in the background worker of this form.

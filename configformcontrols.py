@@ -1,4 +1,4 @@
-﻿"""
+"""
 configformcontrols.py
 
 Contains various custom controls used in the config form .

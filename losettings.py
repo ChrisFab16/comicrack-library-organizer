@@ -1,4 +1,4 @@
-﻿"""
+"""
 losettings.py
 
 Contains a class for profiles and methods to save and load them from xml files.

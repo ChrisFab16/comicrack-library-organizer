@@ -1,4 +1,4 @@
-﻿"""
+"""
 loduplicate.py
 
 Author: Stonepaw

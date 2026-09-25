@@ -19,6 +19,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+# -*- coding: utf-8 -*-
+
 
 import clr
 import System
@@ -87,7 +89,7 @@ def ConfigureLibraryOrganizer(books, wait=None):
         profiles, lastused = load_profiles(PROFILEFILE)
         if books is None:
             # Library hook: load books for preview. ConfigScript fallback passes [].
-            _set_wait_message(wait, "Loading library books…")
+            _set_wait_message(wait, "Loading library books...")
             books = ComicRack.App.GetLibraryBooks()
         show_config_form(profiles, lastused, books, wait)
         
@@ -101,15 +103,23 @@ def ConfigureLibraryOrganizer(books, wait=None):
 #@Key library-organizer-main
 #@Hook ConfigScript
 def ConfigLibraryOrganizer():
-    wait = _show_wait_form("Opening Configure…")
+    wait = None
     try:
+        wait = _show_wait_form("Opening Configure...")
         if _try_spa_configure(wait):
             wait = None  # closed inside before ShowWebConfigure
             return
-        _set_wait_message(wait, "Loading classic Configure…")
-        # Do not call GetLibraryBooks here — large libraries make classic Configure look hung.
+        _set_wait_message(wait, "Loading classic Configure...")
+        # Do not call GetLibraryBooks here - large libraries make classic Configure look hung.
         ConfigureLibraryOrganizer([], wait)
         wait = None  # closed inside show_config_form before ShowDialog
+    except Exception, ex:
+        print "Configure failed"
+        print ex
+        try:
+            MessageBox.Show("Configure failed:\n%s" % str(ex), "Library Organizer", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        except Exception:
+            pass
     finally:
         _close_wait_form(wait)
 
@@ -313,7 +323,7 @@ def _write_spa_bridge(profiles, lastused):
             last_name = str(lastused)
     selected = _json_esc(last_name) if last_name else (_json_esc(profiles.keys()[0]) if len(profiles) else "")
     body = (
-        "{\"version\":\"2.2.6\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\","
+        "{\"version\":\"2.2.7\",\"lastUsed\":\"%s\",\"selectedProfile\":\"%s\","
         "\"openClassic\":false,\"saveOverview\":false,\"profiles\":[%s]}"
     ) % (_json_esc(last_name), selected, ",".join(parts))
     File.WriteAllText(_bridge_path(), body)
@@ -432,7 +442,7 @@ def _bridge_extract_empty_data(text):
 def _bridge_profile_chunk(text, name):
     """Return the full JSON object text for a profile by name (brace-matched).
 
-    Must not slice on the first ']' — Phase D arrays (emptyData, etc.) contain
+    Must not slice on the first ']' - Phase D arrays (emptyData, etc.) contain
     brackets inside the profile object.
     """
     marker = "\"name\":\"%s\"" % _json_esc(name)
@@ -565,7 +575,7 @@ def _try_spa_configure(wait=None):
     try:
         locommon.ComicRack = ComicRack
         lobookmover.ComicRack = ComicRack
-        _set_wait_message(wait, "Preparing Configure…")
+        _set_wait_message(wait, "Preparing Configure...")
         profiles, lastused = load_profiles(PROFILEFILE)
         _write_spa_bridge(profiles, lastused)
         # Close wait before modal SPA so it does not cover the Configure dialog.
@@ -658,7 +668,7 @@ def show_config_form(profiles, lastused, books, wait=None):
     """Shows the configure form and saves the changes if the user press okay.
     Returns True if the user press Okay.
     Returns False if the user pressed cancel."""
-    _set_wait_message(wait, "Building Configure window…")
+    _set_wait_message(wait, "Building Configure window...")
     configform = ConfigureForm(profiles, lastused[0], books)
     _close_wait_form(wait)
     result = configform.ShowDialog()
